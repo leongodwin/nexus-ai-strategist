@@ -1234,29 +1234,6 @@ function renderArchitectView() {
                 </div>
               </div>
             `).join('')}
-
-            <div style="margin-top: 14px; border-top: 1px solid var(--border-subtle); padding-top: 14px; display: flex; flex-direction: column; gap: 10px;">
-              <h5 style="font-size: 11px; text-transform: uppercase; color: var(--azure-cyan);">Scalability & Host Profile</h5>
-              <div class="badge-tag badge-blue" style="width: 100%; text-align: center; padding: 6px;">
-                ${escapeHtml(currentTopo.targetHost)}
-              </div>
-
-              <div class="calc-slider-group">
-                <div class="calc-slider-header">
-                  <span>Provisioned PTU Allocation</span>
-                  <span class="calc-val-display" id="topo-ptu-disp">${currentTopo.ptuCapacity || 100} PTU</span>
-                </div>
-                <input type="range" class="slider-input" id="topo-ptu-slider" min="50" max="400" step="25" value="${currentTopo.ptuCapacity || 100}" />
-              </div>
-
-              <div class="calc-slider-group">
-                <div class="calc-slider-header">
-                  <span>Max Container Auto-Replicas</span>
-                  <span class="calc-val-display" id="topo-rep-disp">${currentTopo.maxReplicas || 16} Pods</span>
-                </div>
-                <input type="range" class="slider-input" id="topo-rep-slider" min="4" max="64" step="4" value="${currentTopo.maxReplicas || 16}" />
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1290,6 +1267,27 @@ function renderArchitectView() {
                   </div>
                 </div>
               `).join('')}
+            </div>
+          </div>
+
+          <div class="canvas-footer-dock">
+            <div>
+              <div style="font-size: 10px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; margin-bottom: 3px;">Target Azure Host</div>
+              <span class="badge-tag badge-blue">${escapeHtml(currentTopo.targetHost)}</span>
+            </div>
+            <div class="calc-slider-group">
+              <div class="calc-slider-header">
+                <span>Provisioned PTU Allocation</span>
+                <span class="calc-val-display" id="topo-ptu-disp">${currentTopo.ptuCapacity || 100} PTU</span>
+              </div>
+              <input type="range" class="slider-input" id="topo-ptu-slider" min="50" max="400" step="25" value="${currentTopo.ptuCapacity || 100}" />
+            </div>
+            <div class="calc-slider-group">
+              <div class="calc-slider-header">
+                <span>Max Container Auto-Replicas</span>
+                <span class="calc-val-display" id="topo-rep-disp">${currentTopo.maxReplicas || 16} Pods</span>
+              </div>
+              <input type="range" class="slider-input" id="topo-rep-slider" min="4" max="64" step="4" value="${currentTopo.maxReplicas || 16}" />
             </div>
           </div>
         </div>
