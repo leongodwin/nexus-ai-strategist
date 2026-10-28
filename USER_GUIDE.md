@@ -247,3 +247,4 @@ When you are ready to transition from strategy to deployment:
 
 > [!NOTE]
 > **Governance is an Accelerator, Not a Blocker:** By classifying initiatives against the EU AI Act upfront in Step 6, engineering teams avoid costly architectural refactoring later in the development cycle.
+
