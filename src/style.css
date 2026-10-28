@@ -199,12 +199,13 @@ body {
 .tenant-pill {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .tenant-label strong {
@@ -223,10 +224,10 @@ body {
 
 /* Header Search */
 .header-center {
-  flex: 1;
-  max-width: 480px;
-  min-width: 280px;
-  margin: 0 16px;
+  flex: 1 1 220px;
+  max-width: 420px;
+  min-width: 180px;
+  margin: 0 8px;
   position: relative;
 }
 
@@ -234,8 +235,8 @@ body {
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-  right: 0;
-  min-width: 380px;
+  width: 440px;
+  max-width: 90vw;
   background: rgba(11, 17, 33, 0.98);
   backdrop-filter: var(--glass-blur-lg);
   border: 1px solid var(--border-active);
@@ -785,7 +786,7 @@ body {
    ========================================================================== */
 .strategy-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
@@ -793,6 +794,12 @@ body {
   .strategy-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  min-width: 320px;
+  max-width: 460px;
 }
 
 .dashboard-card {
@@ -1057,8 +1064,9 @@ body {
 .canvas-viewport {
   flex: 1;
   position: relative;
-  overflow: auto;
-  padding: 30px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1066,21 +1074,36 @@ body {
 
 /* Agent Node Graph */
 .topology-graph {
-  display: flex;
-  align-items: center;
-  gap: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  width: 100%;
   position: relative;
 }
 
 .graph-node {
-  background: rgba(15, 23, 42, 0.9);
+  background: rgba(15, 23, 42, 0.92);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
-  padding: 16px 20px;
-  width: 200px;
+  padding: 16px 18px;
+  width: 100%;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
   position: relative;
   transition: var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.node-step-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--azure-cyan);
+  background: rgba(0, 210, 255, 0.12);
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  padding: 2px 7px;
+  border-radius: 10px;
 }
 
 .graph-node.active-pulse {
@@ -1091,12 +1114,13 @@ body {
 .node-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 8px;
 }
 
 .node-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
 }
@@ -1104,56 +1128,42 @@ body {
 .node-desc {
   font-size: 11px;
   color: var(--text-muted);
+  line-height: 1.45;
 }
 
 .node-tools-pill {
-  margin-top: 10px;
+  margin-top: 12px;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 5px;
 }
 
 .tool-tag {
-  font-size: 9px;
+  font-size: 10px;
   background: rgba(255, 255, 255, 0.08);
-  padding: 2px 5px;
+  padding: 2px 6px;
   border-radius: 4px;
   color: var(--text-muted);
 }
 
 .connector-arrow {
-  display: flex;
-  align-items: center;
-  color: var(--azure-cyan);
-  position: relative;
-}
-
-.connector-line {
-  width: 40px;
-  height: 2px;
-  background: linear-gradient(90deg, var(--azure-blue), var(--azure-cyan));
-  position: relative;
-}
-
-.connector-line::after {
-  content: '';
-  position: absolute;
-  right: -4px;
-  top: -3px;
-  width: 8px;
-  height: 8px;
-  border-top: 2px solid var(--azure-cyan);
-  border-right: 2px solid var(--azure-cyan);
-  transform: rotate(45deg);
+  display: none;
 }
 
 /* Code Preview */
+pre {
+  margin: 0;
+}
+
 .code-block {
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-word;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   color: #38bdf8;
   background: #090d18;
-  padding: 14px;
+  padding: 16px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   overflow-x: auto;

@@ -682,248 +682,243 @@ function renderDiscoveryView() {
         </div>
       </div>
 
-      <!-- Main Strategy Split -->
+      <!-- Full-Width Initiatives Portfolio Table -->
+      <div class="dashboard-card">
+        <div class="card-title-row" style="flex-wrap: wrap; gap: 10px;">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Prioritized Strategic AI Backlog & KPI Scorecard
+          </h3>
+          <div class="filter-pill-bar" role="group" aria-label="Sort Backlog">
+            <span style="font-size: 11px; color: var(--text-dim); margin-right: 4px;">Prioritise by:</span>
+            <button class="filter-pill ${state.sortBy === 'ovi' ? 'active' : ''}" data-sort="ovi">Value Index (OVI)</button>
+            <button class="filter-pill ${state.sortBy === 'roi' ? 'active' : ''}" data-sort="roi">Net Savings</button>
+            <button class="filter-pill ${state.sortBy === 'feasibility' ? 'active' : ''}" data-sort="feasibility">Feasibility</button>
+            <button class="filter-pill ${state.sortBy === 'adoption' ? 'active' : ''}" data-sort="adoption">Adoption %</button>
+          </div>
+        </div>
+
+        <div class="opportunity-table-container">
+          <table class="data-table" id="initiatives-table">
+            <thead>
+              <tr>
+                <th>Initiative, Operational Bottleneck & KPIs</th>
+                <th>Microsoft Stack & Risk</th>
+                <th>Feasibility</th>
+                <th>Adoption & Util.</th>
+                <th>Est. Net Savings</th>
+                <th>Stage Gate (Approval)</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="initiatives-tbody">
+              ${sortedInitiatives.map(item => {
+                const ovi = computeOpportunityValueIndex(item);
+                const riskBadge = item.risk === 'High' ? 'badge-red' : item.risk === 'Medium' ? 'badge-amber' : 'badge-green';
+                return `
+                <tr data-id="${escapeHtml(item.id)}">
+                  <td>
+                    <div class="initiative-cell">
+                      <span class="initiative-title">${escapeHtml(item.title)}</span>
+                      <span class="initiative-dept">${escapeHtml(item.department)} &bull; Lead: ${escapeHtml(item.leadArchitect)} &bull; <strong>OVI: ${ovi}</strong></span>
+                      <p class="friction-subtext"><strong>Bottleneck:</strong> ${escapeHtml(item.problem)}</p>
+                      <div class="kpi-micro-row">
+                        <span class="kpi-micro-tag" title="Operational Cycle Time Improvement">⚡ Cycle: ${escapeHtml(item.cycleTimeReduction || '45m → 4m (-91%)')}</span>
+                        <span class="kpi-micro-tag" title="Defined Business Impact KPI">🎯 KPI: ${escapeHtml(item.kpiTarget || 'Productivity +32%')}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-start;">
+                      <span class="badge-tag badge-blue">${escapeHtml(item.stack.split('+')[0].trim())}</span>
+                      <span class="badge-tag ${riskBadge}">Risk: ${escapeHtml(item.risk || 'Low')}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span style="font-weight: 700; color: #fff;">${Number(item.feasibility)}%</span>
+                      <div class="progress-track" style="width: 44px; margin: 0;">
+                        <div class="progress-fill" style="width: ${Number(item.feasibility)}%;"></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display: flex; flex-direction: column; gap: 4px; min-width: 95px;">
+                      <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                        <span style="color: #fff; font-weight: 600;">${Number(item.adoptionRate ?? 0)}% Adopt</span>
+                        <span style="color: var(--azure-cyan);">${Number(item.utilisationRate ?? 70)}% Util</span>
+                      </div>
+                      <div class="progress-track" style="width: 100%; margin: 0;">
+                        <div class="progress-fill" style="width: ${Number(item.adoptionRate ?? 0)}%; background: linear-gradient(90deg, #10b981, #00d2ff);"></div>
+                      </div>
+                      <span style="font-size: 10px; color: var(--text-dim);">${Number(item.weeklyActiveUsers ?? 45).toLocaleString()} WAU</span>
+                    </div>
+                  </td>
+                  <td style="font-weight: 700; color: #34d399;">
+                    $${Number(item.projectedRoi).toLocaleString()}
+                    <div style="font-size: 10px; color: var(--text-dim); font-weight: 400;">${Number(item.hoursSaved).toLocaleString()} hrs/yr</div>
+                  </td>
+                  <td>
+                    <select class="inline-select status-stage-select" data-id="${escapeHtml(item.id)}" aria-label="Approval Stage Gate">
+                      ${stageOptions.map(st => `
+                        <option value="${escapeHtml(st)}" ${item.status === st ? 'selected' : ''}>${escapeHtml(st)}</option>
+                      `).join('')}
+                    </select>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-outline btn-view-spec" data-id="${escapeHtml(item.id)}">
+                      Architect
+                    </button>
+                  </td>
+                </tr>
+              `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Bottom Split: ROI Simulator + 2x2 Stakeholder Prioritisation Matrix -->
       <div class="strategy-grid">
-        
-        <!-- Initiatives Portfolio Table -->
         <div class="dashboard-card">
-          <div class="card-title-row" style="flex-wrap: wrap; gap: 10px;">
+          <div class="card-title-row">
             <h3>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7"></rect>
-                <rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3" y="14" width="7" height="7"></rect>
+                <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                <line x1="8" y1="6" x2="16" y2="6"></line>
+                <line x1="16" y1="14" x2="16" y2="14"></line>
+                <line x1="12" y1="14" x2="12" y2="14"></line>
+                <line x1="8" y1="14" x2="8" y2="14"></line>
               </svg>
-              Prioritized Strategic AI Backlog & KPI Scorecard
+              Executive ROI Financial Simulator
             </h3>
-            <div class="filter-pill-bar" role="group" aria-label="Sort Backlog">
-              <span style="font-size: 11px; color: var(--text-dim); margin-right: 4px;">Prioritise by:</span>
-              <button class="filter-pill ${state.sortBy === 'ovi' ? 'active' : ''}" data-sort="ovi">Value Index (OVI)</button>
-              <button class="filter-pill ${state.sortBy === 'roi' ? 'active' : ''}" data-sort="roi">Net Savings</button>
-              <button class="filter-pill ${state.sortBy === 'feasibility' ? 'active' : ''}" data-sort="feasibility">Feasibility</button>
-              <button class="filter-pill ${state.sortBy === 'adoption' ? 'active' : ''}" data-sort="adoption">Adoption %</button>
-            </div>
           </div>
 
-          <div class="opportunity-table-container">
-            <table class="data-table" id="initiatives-table">
-              <thead>
-                <tr>
-                  <th>Initiative, Operational Bottleneck & KPIs</th>
-                  <th>Microsoft Stack & Risk</th>
-                  <th>Feasibility</th>
-                  <th>Adoption & Util.</th>
-                  <th>Est. Net Savings</th>
-                  <th>Stage Gate (Approval)</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="initiatives-tbody">
-                ${sortedInitiatives.map(item => {
-                  const ovi = computeOpportunityValueIndex(item);
-                  const riskBadge = item.risk === 'High' ? 'badge-red' : item.risk === 'Medium' ? 'badge-amber' : 'badge-green';
-                  return `
-                  <tr data-id="${escapeHtml(item.id)}">
-                    <td>
-                      <div class="initiative-cell">
-                        <span class="initiative-title">${escapeHtml(item.title)}</span>
-                        <span class="initiative-dept">${escapeHtml(item.department)} &bull; Lead: ${escapeHtml(item.leadArchitect)} &bull; <strong>OVI: ${ovi}</strong></span>
-                        <p class="friction-subtext"><strong>Bottleneck:</strong> ${escapeHtml(item.problem)}</p>
-                        <div class="kpi-micro-row">
-                          <span class="kpi-micro-tag" title="Operational Cycle Time Improvement">⚡ Cycle: ${escapeHtml(item.cycleTimeReduction || '45m → 4m (-91%)')}</span>
-                          <span class="kpi-micro-tag" title="Defined Business Impact KPI">🎯 KPI: ${escapeHtml(item.kpiTarget || 'Productivity +32%')}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-start;">
-                        <span class="badge-tag badge-blue">${escapeHtml(item.stack.split('+')[0].trim())}</span>
-                        <span class="badge-tag ${riskBadge}">Risk: ${escapeHtml(item.risk || 'Low')}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-weight: 700; color: #fff;">${Number(item.feasibility)}%</span>
-                        <div class="progress-track" style="width: 44px; margin: 0;">
-                          <div class="progress-fill" style="width: ${Number(item.feasibility)}%;"></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div style="display: flex; flex-direction: column; gap: 4px; min-width: 95px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 11px;">
-                          <span style="color: #fff; font-weight: 600;">${Number(item.adoptionRate ?? 0)}% Adopt</span>
-                          <span style="color: var(--azure-cyan);">${Number(item.utilisationRate ?? 70)}% Util</span>
-                        </div>
-                        <div class="progress-track" style="width: 100%; margin: 0;">
-                          <div class="progress-fill" style="width: ${Number(item.adoptionRate ?? 0)}%; background: linear-gradient(90deg, #10b981, #00d2ff);"></div>
-                        </div>
-                        <span style="font-size: 10px; color: var(--text-dim);">${Number(item.weeklyActiveUsers ?? 45).toLocaleString()} WAU</span>
-                      </div>
-                    </td>
-                    <td style="font-weight: 700; color: #34d399;">
-                      $${Number(item.projectedRoi).toLocaleString()}
-                      <div style="font-size: 10px; color: var(--text-dim); font-weight: 400;">${Number(item.hoursSaved).toLocaleString()} hrs/yr</div>
-                    </td>
-                    <td>
-                      <select class="inline-select status-stage-select" data-id="${escapeHtml(item.id)}" aria-label="Approval Stage Gate">
-                        ${stageOptions.map(st => `
-                          <option value="${escapeHtml(st)}" ${item.status === st ? 'selected' : ''}>${escapeHtml(st)}</option>
-                        `).join('')}
-                      </select>
-                    </td>
-                    <td>
-                      <button class="btn btn-sm btn-outline btn-view-spec" data-id="${escapeHtml(item.id)}">
-                        Architect
-                      </button>
-                    </td>
-                  </tr>
-                `;
-                }).join('')}
-              </tbody>
-            </table>
+          <div class="roi-calculator">
+            <div class="calc-slider-group">
+              <div class="calc-slider-header">
+                <span>Annual Hours Automated</span>
+                <span class="calc-val-display" id="disp-hours">5,000 hrs</span>
+              </div>
+              <input type="range" class="slider-input" id="calc-hours" min="1000" max="25000" step="500" value="5000" />
+            </div>
+
+            <div class="calc-slider-group">
+              <div class="calc-slider-header">
+                <span>Fully Loaded Hourly Rate ($/hr)</span>
+                <span class="calc-val-display" id="disp-rate">$65 / hr</span>
+              </div>
+              <input type="range" class="slider-input" id="calc-rate" min="30" max="150" step="5" value="65" />
+            </div>
+
+            <div class="calc-slider-group">
+              <div class="calc-slider-header">
+                <span>Est. Cloud & Model API Cost ($/yr)</span>
+                <span class="calc-val-display" id="disp-cost">$18,000 / yr</span>
+              </div>
+              <input type="range" class="slider-input" id="calc-cost" min="5000" max="60000" step="1000" value="18000" />
+            </div>
+
+            <div class="roi-results-box">
+              <div class="roi-metric-item">
+                <div class="label">Gross Labor Value</div>
+                <div class="val" id="calc-gross">$325,000</div>
+              </div>
+              <div class="roi-metric-item">
+                <div class="label">Net Annual Benefit</div>
+                <div class="val" id="calc-net">$307,000</div>
+              </div>
+              <div class="roi-metric-item">
+                <div class="label">Calculated ROI</div>
+                <div class="val" id="calc-roi" style="color: #00d2ff;">1,706%</div>
+              </div>
+              <div class="roi-metric-item">
+                <div class="label">Payback Horizon</div>
+                <div class="val" id="calc-payback" style="color: #c084fc;">0.7 mos</div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-apply-calculator">
+              Draft Initiative with Calculated ROI
+            </button>
           </div>
         </div>
 
-        <!-- Right Column: ROI Simulator + 2x2 Stakeholder Prioritisation Matrix -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-          <div class="dashboard-card">
-            <div class="card-title-row">
-              <h3>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="4" y="2" width="16" height="20" rx="2"></rect>
-                  <line x1="8" y1="6" x2="16" y2="6"></line>
-                  <line x1="16" y1="14" x2="16" y2="14"></line>
-                  <line x1="12" y1="14" x2="12" y2="14"></line>
-                  <line x1="8" y1="14" x2="8" y2="14"></line>
-                </svg>
-                Executive ROI Financial Simulator
-              </h3>
-            </div>
-
-            <div class="roi-calculator">
-              <div class="calc-slider-group">
-                <div class="calc-slider-header">
-                  <span>Annual Hours Automated</span>
-                  <span class="calc-val-display" id="disp-hours">5,000 hrs</span>
-                </div>
-                <input type="range" class="slider-input" id="calc-hours" min="1000" max="25000" step="500" value="5000" />
-              </div>
-
-              <div class="calc-slider-group">
-                <div class="calc-slider-header">
-                  <span>Fully Loaded Hourly Rate ($/hr)</span>
-                  <span class="calc-val-display" id="disp-rate">$65 / hr</span>
-                </div>
-                <input type="range" class="slider-input" id="calc-rate" min="30" max="150" step="5" value="65" />
-              </div>
-
-              <div class="calc-slider-group">
-                <div class="calc-slider-header">
-                  <span>Est. Cloud & Model API Cost ($/yr)</span>
-                  <span class="calc-val-display" id="disp-cost">$18,000 / yr</span>
-                </div>
-                <input type="range" class="slider-input" id="calc-cost" min="5000" max="60000" step="1000" value="18000" />
-              </div>
-
-              <div class="roi-results-box">
-                <div class="roi-metric-item">
-                  <div class="label">Gross Labor Value</div>
-                  <div class="val" id="calc-gross">$325,000</div>
-                </div>
-                <div class="roi-metric-item">
-                  <div class="label">Net Annual Benefit</div>
-                  <div class="val" id="calc-net">$307,000</div>
-                </div>
-                <div class="roi-metric-item">
-                  <div class="label">Calculated ROI</div>
-                  <div class="val" id="calc-roi" style="color: #00d2ff;">1,706%</div>
-                </div>
-                <div class="roi-metric-item">
-                  <div class="label">Payback Horizon</div>
-                  <div class="val" id="calc-payback" style="color: #c084fc;">0.7 mos</div>
-                </div>
-              </div>
-
-              <button class="btn btn-primary" id="btn-apply-calculator">
-                Draft Initiative with Calculated ROI
-              </button>
-            </div>
+        <!-- 2x2 Stakeholder Prioritisation Matrix -->
+        <div class="dashboard-card">
+          <div class="card-title-row" style="margin-bottom: 6px;">
+            <h3>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="2" x2="12" y2="22"></line>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+              </svg>
+              Stakeholder Prioritisation Matrix
+            </h3>
+            <span class="badge-tag badge-purple">Value vs. Feasibility</span>
           </div>
-
-          <!-- 2x2 Stakeholder Prioritisation Matrix -->
-          <div class="dashboard-card">
-            <div class="card-title-row" style="margin-bottom: 6px;">
-              <h3>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="2" x2="12" y2="22"></line>
-                  <line x1="2" y1="12" x2="22" y2="12"></line>
-                </svg>
-                Stakeholder Prioritisation Matrix
-              </h3>
-              <span class="badge-tag badge-purple">Value vs. Feasibility</span>
+          <p style="font-size: 11px; color: var(--text-muted);">
+            Aligns C-suite sponsorship by balancing technical readiness (&ge;90%) against net annual impact (&ge;$400k).
+          </p>
+          <div class="matrix-grid">
+            <div class="matrix-quadrant" style="border-color: rgba(16, 185, 129, 0.35);">
+              <h5 style="color: #34d399;">
+                <span>★ Quick Wins</span>
+                <span>${quickWins.length}</span>
+              </h5>
+              ${quickWins.map(i => `
+                <div class="matrix-chip">
+                  <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(i.title)}</span>
+                  <span style="color: #34d399; font-weight: 700;">$${Math.round(i.projectedRoi / 1000)}k</span>
+                </div>
+              `).join('') || '<span style="font-size:10px;color:var(--text-dim);">None</span>'}
             </div>
-            <p style="font-size: 11px; color: var(--text-muted);">
-              Aligns C-suite sponsorship by balancing technical readiness (&ge;90%) against net annual impact (&ge;$400k).
-            </p>
-            <div class="matrix-grid">
-              <div class="matrix-quadrant" style="border-color: rgba(16, 185, 129, 0.35);">
-                <h5 style="color: #34d399;">
-                  <span>★ Quick Wins</span>
-                  <span>${quickWins.length}</span>
-                </h5>
-                ${quickWins.map(i => `
-                  <div class="matrix-chip">
-                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(i.title)}</span>
-                    <span style="color: #34d399; font-weight: 700;">$${Math.round(i.projectedRoi / 1000)}k</span>
-                  </div>
-                `).join('') || '<span style="font-size:10px;color:var(--text-dim);">None</span>'}
-              </div>
 
-              <div class="matrix-quadrant" style="border-color: rgba(0, 210, 255, 0.35);">
-                <h5 style="color: #38bdf8;">
-                  <span>🚀 Strategic Bets</span>
-                  <span>${strategicBets.length}</span>
-                </h5>
-                ${strategicBets.map(i => `
-                  <div class="matrix-chip">
-                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(i.title)}</span>
-                    <span style="color: #38bdf8; font-weight: 700;">$${Math.round(i.projectedRoi / 1000)}k</span>
-                  </div>
-                `).join('') || '<span style="font-size:10px;color:var(--text-dim);">None</span>'}
-              </div>
+            <div class="matrix-quadrant" style="border-color: rgba(0, 210, 255, 0.35);">
+              <h5 style="color: #38bdf8;">
+                <span>🚀 Strategic Bets</span>
+                <span>${strategicBets.length}</span>
+              </h5>
+              ${strategicBets.map(i => `
+                <div class="matrix-chip">
+                  <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(i.title)}</span>
+                  <span style="color: #38bdf8; font-weight: 700;">$${Math.round(i.projectedRoi / 1000)}k</span>
+                </div>
+              `).join('') || '<span style="font-size:10px;color:var(--text-dim);">None</span>'}
+            </div>
 
-              <div class="matrix-quadrant">
-                <h5 style="color: #c084fc;">
-                  <span>⚡ Tactical Auto</span>
-                  <span>${tacticalAuto.length}</span>
-                </h5>
-                ${tacticalAuto.map(i => `
-                  <div class="matrix-chip">
-                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(i.title)}</span>
-                    <span style="color: #c084fc; font-weight: 700;">$${Math.round(i.projectedRoi / 1000)}k</span>
-                  </div>
-                `).join('') || '<span style="font-size:10px;color:var(--text-dim);">None</span>'}
-              </div>
+            <div class="matrix-quadrant">
+              <h5 style="color: #c084fc;">
+                <span>⚡ Tactical Auto</span>
+                <span>${tacticalAuto.length}</span>
+              </h5>
+              ${tacticalAuto.map(i => `
+                <div class="matrix-chip">
+                  <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(i.title)}</span>
+                  <span style="color: #c084fc; font-weight: 700;">$${Math.round(i.projectedRoi / 1000)}k</span>
+                </div>
+              `).join('') || '<span style="font-size:10px;color:var(--text-dim);">None</span>'}
+            </div>
 
-              <div class="matrix-quadrant">
-                <h5 style="color: #fbbf24;">
-                  <span>🔬 Incubate / R&D</span>
-                  <span>${foundationalRd.length}</span>
-                </h5>
-                ${foundationalRd.map(i => `
-                  <div class="matrix-chip">
-                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(i.title)}</span>
-                    <span style="color: #fbbf24; font-weight: 700;">$${Math.round(i.projectedRoi / 1000)}k</span>
-                  </div>
-                `).join('') || '<span style="font-size:10px;color:var(--text-dim);">None</span>'}
-              </div>
+            <div class="matrix-quadrant">
+              <h5 style="color: #fbbf24;">
+                <span>🔬 Incubate / R&D</span>
+                <span>${foundationalRd.length}</span>
+              </h5>
+              ${foundationalRd.map(i => `
+                <div class="matrix-chip">
+                  <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(i.title)}</span>
+                  <span style="color: #fbbf24; font-weight: 700;">$${Math.round(i.projectedRoi / 1000)}k</span>
+                </div>
+              `).join('') || '<span style="font-size:10px;color:var(--text-dim);">None</span>'}
             </div>
           </div>
         </div>
-
       </div>
     </div>
   `;
@@ -1279,21 +1274,21 @@ function renderArchitectView() {
             <div class="topology-graph" id="agent-graph">
               ${currentTopo.nodes.map((node, idx) => `
                 <div class="graph-node ${node.id === activeNode.id ? 'active-pulse' : ''}" data-node-id="${escapeHtml(node.id)}" style="cursor: pointer;">
-                  <div class="node-title-row">
-                    <span style="font-size: 20px;">${escapeHtml(node.avatar)}</span>
-                    <span class="node-title">${escapeHtml(node.role)}</span>
+                  <div>
+                    <div class="node-title-row">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 20px;">${escapeHtml(node.avatar)}</span>
+                        <span class="node-title">${escapeHtml(node.role)}</span>
+                      </div>
+                      <span class="node-step-badge">Step ${idx + 1}</span>
+                    </div>
+                    <p class="node-desc">${escapeHtml(node.desc)}</p>
                   </div>
-                  <p class="node-desc">${escapeHtml(node.desc)}</p>
                   <div class="node-tools-pill">
                     <span class="tool-tag">${escapeHtml(node.model.split(' ')[0])}</span>
                     <span class="tool-tag">${node.tools.length} Tools</span>
                   </div>
                 </div>
-                ${idx < currentTopo.nodes.length - 1 ? `
-                  <div class="connector-arrow">
-                    <div class="connector-line"></div>
-                  </div>
-                ` : ''}
               `).join('')}
             </div>
           </div>
@@ -2563,6 +2558,9 @@ function handleDownloadPackage() {
 // Utility: Toast Notifications
 // ==========================================================================
 function showToast(message, type = 'info') {
+  while (toastContainer.children.length >= 2) {
+    toastContainer.firstElementChild.remove();
+  }
   const toast = document.createElement('div');
   toast.className = 'toast';
   const icon = type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
@@ -2572,8 +2570,8 @@ function showToast(message, type = 'info') {
   setTimeout(() => {
     toast.style.opacity = '0';
     toast.style.transform = 'translateY(10px)';
-    setTimeout(() => toast.remove(), 300);
-  }, 3200);
+    setTimeout(() => toast.remove(), 250);
+  }, 2200);
 }
 
 // Start Application
