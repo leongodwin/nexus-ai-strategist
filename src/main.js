@@ -12,13 +12,48 @@ import {
   HORIZON_RADAR
 } from './data/mockData.js';
 
-const STORAGE_KEY = 'nexus_ai_strategist_state_v2';
+const STORAGE_KEY = 'nexus_ai_strategist_state_v3';
 
 let activeSimulationTimers = [];
 
 function clearSimulationTimers() {
   activeSimulationTimers.forEach(id => clearTimeout(id));
   activeSimulationTimers = [];
+}
+
+// Crisp Duotone Vector Icon Helper (Replaces OS Emojis)
+function getIconSvg(name, size = 16) {
+  const icons = {
+    dollar: '<line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>',
+    clock: '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>',
+    zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>',
+    users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+    bot: '<rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8.01" y2="16"></line><line x1="16" y1="16" x2="16.01" y2="16"></line>',
+    search: '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>',
+    cpu: '<rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>',
+    'file-text': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line>',
+    scale: '<path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"></path><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path>',
+    globe: '<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>',
+    compass: '<circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>',
+    truck: '<rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle>',
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>',
+    book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>',
+    check: '<polyline points="20 6 9 17 4 12"></polyline>',
+    radio: '<circle cx="12" cy="12" r="2"></circle><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path>',
+    wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>',
+    plug: '<path d="M12 22v-5"></path><path d="M9 8V2"></path><path d="M15 8V2"></path><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"></path>',
+    target: '<circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle>',
+    activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>',
+    alert: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>',
+    info: '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>',
+    star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>',
+    rocket: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>',
+    flask: '<path d="M10 2v7.31"></path><path d="M14 9.3V1.99"></path><path d="M8.5 2h7"></path><path d="M14 9.3a6.5 6.5 0 1 1-4 0"></path>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>'
+  };
+  const body = icons[name] || icons.bot;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">${body}</svg>`;
 }
 
 // HTML Escaping Utility to prevent XSS from user inputs
@@ -640,9 +675,9 @@ function renderDiscoveryView() {
         <div class="metric-card" style="--card-accent: #00d2ff;">
           <div class="metric-header">
             <span class="metric-title">Projected Annual Net Impact</span>
-            <div class="metric-icon">💰</div>
+            <div class="metric-icon">${getIconSvg('dollar', 15)}</div>
           </div>
-          <div class="metric-value" id="kpi-total-roi">$${(totalRoi / 1000).toFixed(0)}k</div>
+          <div class="metric-value" id="kpi-total-roi">$${Math.round(totalRoi / 1000).toLocaleString()}k</div>
           <div class="metric-footer">
             <span class="trend-up">↑ 24%</span> vs. manual baseline TCO
           </div>
@@ -651,7 +686,7 @@ function renderDiscoveryView() {
         <div class="metric-card" style="--card-accent: #10b981;">
           <div class="metric-header">
             <span class="metric-title">Annual Labor Hours Saved</span>
-            <div class="metric-icon">⏱️</div>
+            <div class="metric-icon">${getIconSvg('clock', 15)}</div>
           </div>
           <div class="metric-value">${totalHours.toLocaleString()} hrs</div>
           <div class="metric-footer">
@@ -662,18 +697,18 @@ function renderDiscoveryView() {
         <div class="metric-card" style="--card-accent: #7c3aed;">
           <div class="metric-header">
             <span class="metric-title">Avg. Technical Feasibility</span>
-            <div class="metric-icon">⚡</div>
+            <div class="metric-icon">${getIconSvg('zap', 15)}</div>
           </div>
           <div class="metric-value">${avgFeasibility}%</div>
           <div class="metric-footer">
-            Microsoft Cloud Readiness Score
+            Microsoft &amp; RPA Cloud Readiness
           </div>
         </div>
 
         <div class="metric-card" style="--card-accent: #f59e0b;">
           <div class="metric-header">
-            <span class="metric-title">Adoption & Utilisation KPI</span>
-            <div class="metric-icon">👥</div>
+            <span class="metric-title">Adoption &amp; Utilisation KPI</span>
+            <div class="metric-icon">${getIconSvg('users', 15)}</div>
           </div>
           <div class="metric-value">${avgAdoption}% <span style="font-size: 14px; color: #94a3b8; font-weight: 500;">/ ${avgUtilisation}% Util.</span></div>
           <div class="metric-footer">
@@ -692,7 +727,7 @@ function renderDiscoveryView() {
               <rect x="14" y="14" width="7" height="7"></rect>
               <rect x="3" y="14" width="7" height="7"></rect>
             </svg>
-            Prioritized Strategic AI Backlog & KPI Scorecard
+            Prioritized Strategic AI Backlog, SDLC Lifecycle &amp; Change Management Scorecard
           </h3>
           <div class="filter-pill-bar" role="group" aria-label="Sort Backlog">
             <span style="font-size: 11px; color: var(--text-dim); margin-right: 4px;">Prioritise by:</span>
@@ -707,10 +742,10 @@ function renderDiscoveryView() {
           <table class="data-table" id="initiatives-table">
             <thead>
               <tr>
-                <th>Initiative, Operational Bottleneck & KPIs</th>
-                <th>Microsoft Stack & Risk</th>
+                <th>Initiative, Bottleneck, SDLC &amp; Change Programme</th>
+                <th>Enterprise AI Stack &amp; Risk</th>
                 <th>Feasibility</th>
-                <th>Adoption & Util.</th>
+                <th>Adoption &amp; Util.</th>
                 <th>Est. Net Savings</th>
                 <th>Stage Gate (Approval)</th>
                 <th>Action</th>
@@ -728,8 +763,10 @@ function renderDiscoveryView() {
                       <span class="initiative-dept">${escapeHtml(item.department)} &bull; Lead: ${escapeHtml(item.leadArchitect)} &bull; <strong>OVI: ${ovi}</strong></span>
                       <p class="friction-subtext"><strong>Bottleneck:</strong> ${escapeHtml(item.problem)}</p>
                       <div class="kpi-micro-row">
-                        <span class="kpi-micro-tag" title="Operational Cycle Time Improvement">⚡ Cycle: ${escapeHtml(item.cycleTimeReduction || '45m → 4m (-91%)')}</span>
-                        <span class="kpi-micro-tag" title="Defined Business Impact KPI">🎯 KPI: ${escapeHtml(item.kpiTarget || 'Productivity +32%')}</span>
+                        <span class="kpi-micro-tag" title="Operational Cycle Time Improvement">Cycle: ${escapeHtml(item.cycleTimeReduction || '45m → 4m (-91%)')}</span>
+                        <span class="kpi-micro-tag" title="Defined Business Impact KPI">KPI: ${escapeHtml(item.kpiTarget || 'Productivity +32%')}</span>
+                        <span class="kpi-micro-tag" title="SDLC & Deployment Lifecycle Stage">SDLC: ${escapeHtml(item.sdlcStage || 'CI/CD Prod Ring')}</span>
+                        <span class="kpi-micro-tag" title="Technology Adoption & Change Management Programme">Change: ${escapeHtml(item.changeProgramme || 'ADKAR Champions Network')}</span>
                       </div>
                     </div>
                   </td>
@@ -868,7 +905,7 @@ function renderDiscoveryView() {
           <div class="matrix-grid">
             <div class="matrix-quadrant" style="border-color: rgba(16, 185, 129, 0.35);">
               <h5 style="color: #34d399;">
-                <span>★ Quick Wins</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;">${getIconSvg('star', 12)} Quick Wins</span>
                 <span>${quickWins.length}</span>
               </h5>
               ${quickWins.map(i => `
@@ -881,7 +918,7 @@ function renderDiscoveryView() {
 
             <div class="matrix-quadrant" style="border-color: rgba(0, 210, 255, 0.35);">
               <h5 style="color: #38bdf8;">
-                <span>🚀 Strategic Bets</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;">${getIconSvg('rocket', 12)} Strategic Bets</span>
                 <span>${strategicBets.length}</span>
               </h5>
               ${strategicBets.map(i => `
@@ -894,7 +931,7 @@ function renderDiscoveryView() {
 
             <div class="matrix-quadrant">
               <h5 style="color: #c084fc;">
-                <span>⚡ Tactical Auto</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;">${getIconSvg('zap', 12)} Tactical Auto</span>
                 <span>${tacticalAuto.length}</span>
               </h5>
               ${tacticalAuto.map(i => `
@@ -907,7 +944,7 @@ function renderDiscoveryView() {
 
             <div class="matrix-quadrant">
               <h5 style="color: #fbbf24;">
-                <span>🔬 Incubate / R&D</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;">${getIconSvg('flask', 12)} Incubate / R&amp;D</span>
                 <span>${foundationalRd.length}</span>
               </h5>
               ${foundationalRd.map(i => `
@@ -1043,37 +1080,38 @@ function attachDiscoveryEvents() {
 function synthesizeTopologyForInitiative(initItem) {
   const topoId = `topo-${initItem.id}`;
   const isFabric = initItem.stack.includes('Fabric');
-  const isCopilot = initItem.stack.includes('Copilot Studio') || initItem.stack.includes('M365');
+  const isCopilot = initItem.stack.includes('Copilot Studio') || initItem.stack.includes('Power Platform');
+  const isUiPath = initItem.stack.includes('UiPath');
 
   const nodes = [
     {
       id: `${topoId}-intake`,
       role: 'Intent & Context Router',
-      avatar: '⚡',
-      model: 'Azure OpenAI GPT-4o-mini',
+      icon: 'zap',
+      model: 'Azure AI Foundry (GPT-4o-mini)',
       desc: `Classifies incoming ${initItem.department} requests and validates Purview sensitivity boundaries.`,
       tools: ['Semantic Kernel Intent Filter', 'Purview Sensitivity Inspector']
     },
     {
       id: `${topoId}-grounding`,
       role: isFabric ? 'OneLake Data Mesh Grounder' : 'Enterprise RAG Grounding Agent',
-      avatar: '🔍',
+      icon: 'search',
       model: isFabric ? 'Microsoft Fabric Direct Lake + AI Search' : 'Azure AI Search (Semantic Ranker)',
       desc: `Retrieves security-trimmed enterprise context for "${initItem.title}".`,
       tools: isFabric ? ['OneLake Delta Reader', 'Entra ID RBAC Trimmer'] : ['Azure AI Search Plugin', 'Graph ACL Filter']
     },
     {
       id: `${topoId}-executor`,
-      role: 'Autonomous Workflow Executor',
-      avatar: '⚙️',
-      model: 'Azure OpenAI GPT-4o',
+      role: isUiPath ? 'UiPath Unattended RPA Bot' : 'Autonomous Workflow Executor',
+      icon: isUiPath ? 'bot' : 'cpu',
+      model: isUiPath ? 'UiPath Unattended RPA Bot + GPT-4o' : 'Azure AI Foundry (GPT-4o)',
       desc: `Executes core business logic and system updates across ${initItem.stack.split('+')[0].trim()}.`,
-      tools: isCopilot ? ['Power Automate Flow Trigger', 'Dataverse Web API'] : ['Semantic Kernel Native Plugin', 'Managed Identity Gateway']
+      tools: isCopilot ? ['Power Automate Flow Trigger', 'Dataverse Web API'] : ['UiPath Orchestrator Queue', 'Managed Identity Gateway']
     },
     {
       id: `${topoId}-guardian`,
       role: 'Responsible AI & SLA Auditor',
-      avatar: '🛡️',
+      icon: 'shield',
       model: 'Azure AI Content Safety',
       desc: 'Verifies groundedness score (>0.95), redacts PII, and logs OpenTelemetry audit trail.',
       tools: ['Groundedness Shield', 'Azure Monitor OpenTelemetry']
@@ -1084,7 +1122,8 @@ function synthesizeTopologyForInitiative(initItem) {
     id: topoId,
     name: `${initItem.title} Topology`,
     framework: initItem.stack,
-    targetHost: isCopilot ? 'Microsoft Copilot Studio + Azure Container Apps' : 'Azure AI Agent Service + AKS',
+    targetHost: isCopilot ? 'Microsoft Copilot Studio + Power Platform' : 'Azure AI Foundry + UiPath Cloud',
+    sdlcPipeline: 'GitHub Actions + Power Platform ALM + Azure Bicep',
     ptuCapacity: 100,
     maxReplicas: 16,
     semanticCache: true,
@@ -1118,13 +1157,15 @@ function handleNewInitiativeSubmit(e) {
     projectedRoi: netRoi,
     risk: 'Low',
     status: 'Discovery & Blueprint',
+    sdlcStage: 'Architecture Sign-Off -> Dev Ring',
+    changeProgramme: 'Stakeholder Co-Design & Champions Network',
     adoptionRate: 35,
     utilisationRate: 72,
     weeklyActiveUsers: 60,
     kpiTarget: 'SLA Cycle Time -90%',
     leadArchitect: 'Chief AI Strategist',
     topologyId: `topo-${initId}`,
-    models: ['Azure OpenAI GPT-4o', 'Azure AI Search']
+    models: ['Azure AI Foundry (GPT-4o)', 'Azure AI Search']
   };
 
   const generatedTopo = synthesizeTopologyForInitiative(newInit);
@@ -1153,9 +1194,11 @@ function renderArchitectView() {
   const linkedInitiative = state.initiatives.find(i => i.topologyId === currentTopo.id);
 
   const availableModels = [
-    'Azure OpenAI GPT-4o',
-    'Azure OpenAI GPT-4o-mini',
-    'Azure OpenAI o3-mini',
+    'Azure AI Foundry (GPT-4o)',
+    'Azure AI Foundry (GPT-4o-mini)',
+    'Azure AI Foundry (o3-mini)',
+    'UiPath Unattended RPA Bot + GPT-4o',
+    'Power Automate + UiPath RPA Connector',
     'Phi-4 Multimodal ONNX (Local NPU)',
     'Azure AI Search (Hybrid + Semantic Ranker)',
     'Azure Document Intelligence v4.0',
@@ -1226,7 +1269,7 @@ function renderArchitectView() {
             ${state.topologies.map(topo => `
               <div class="agent-template-card ${topo.id === currentTopo.id ? 'active' : ''}" data-topo-id="${escapeHtml(topo.id)}">
                 <div class="agent-template-header">
-                  <div class="agent-avatar">🤖</div>
+                  <div class="agent-avatar">${getIconSvg('bot', 16)}</div>
                   <div class="agent-template-info">
                     <h5>${escapeHtml(topo.name)}</h5>
                     <p>${escapeHtml(topo.framework)} &bull; ${topo.nodes.length} Agents</p>
@@ -1240,10 +1283,10 @@ function renderArchitectView() {
         <!-- Center: Interactive Visual Topology Canvas -->
         <div class="canvas-container">
           <div class="canvas-toolbar">
-            <span style="font-size: 12px; color: var(--text-muted);">Interactive Agent Topology Graph (${currentTopo.nodes.length} Nodes) &bull; Click node to configure</span>
+            <span style="font-size: 12px; color: var(--text-muted);">Interactive Agent Topology Graph (${currentTopo.nodes.length} Nodes) &bull; SDLC: <strong>${escapeHtml(currentTopo.sdlcPipeline || 'GitHub Actions + Azure Bicep')}</strong></span>
             <div style="display: flex; gap: 8px;">
               <span class="badge-tag badge-blue">${currentTopo.ptuCapacity || 100} PTU / ${currentTopo.maxReplicas || 16} Max Replicas</span>
-              <span class="badge-tag badge-green">Zero-Trust Boundaries Active</span>
+              <span class="badge-tag badge-green">Zero-Trust Active</span>
             </div>
           </div>
 
@@ -1254,7 +1297,7 @@ function renderArchitectView() {
                   <div>
                     <div class="node-title-row">
                       <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 20px;">${escapeHtml(node.avatar)}</span>
+                        <span class="node-icon-box">${getIconSvg(node.icon || 'bot', 15)}</span>
                         <span class="node-title">${escapeHtml(node.role)}</span>
                       </div>
                       <span class="node-step-badge">Step ${idx + 1}</span>
@@ -1272,19 +1315,19 @@ function renderArchitectView() {
 
           <div class="canvas-footer-dock">
             <div>
-              <div style="font-size: 10px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; margin-bottom: 3px;">Target Azure Host</div>
+              <div style="font-size: 10px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; margin-bottom: 3px;">Target Enterprise Host</div>
               <span class="badge-tag badge-blue">${escapeHtml(currentTopo.targetHost)}</span>
             </div>
             <div class="calc-slider-group">
               <div class="calc-slider-header">
-                <span>Provisioned PTU Allocation</span>
+                <span>PTU Allocation</span>
                 <span class="calc-val-display" id="topo-ptu-disp">${currentTopo.ptuCapacity || 100} PTU</span>
               </div>
               <input type="range" class="slider-input" id="topo-ptu-slider" min="50" max="400" step="25" value="${currentTopo.ptuCapacity || 100}" />
             </div>
             <div class="calc-slider-group">
               <div class="calc-slider-header">
-                <span>Max Container Auto-Replicas</span>
+                <span>Max Auto-Replicas</span>
                 <span class="calc-val-display" id="topo-rep-disp">${currentTopo.maxReplicas || 16} Pods</span>
               </div>
               <input type="range" class="slider-input" id="topo-rep-slider" min="4" max="64" step="4" value="${currentTopo.maxReplicas || 16}" />
@@ -1296,7 +1339,7 @@ function renderArchitectView() {
         <div class="studio-panel studio-panel-right">
           <div class="panel-header">
             <h4>
-              <span style="font-size: 16px;">${escapeHtml(activeNode.avatar)}</span>
+              <span class="node-icon-box">${getIconSvg(activeNode.icon || 'bot', 14)}</span>
               ${escapeHtml(activeNode.role)}
             </h4>
           </div>
@@ -1313,11 +1356,12 @@ function renderArchitectView() {
               </div>
 
               <div>
-                <label style="font-size: 10px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Assigned Native Tools & Plugins</label>
+                <label style="font-size: 10px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Assigned Native Tools &amp; Plugins</label>
                 <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
                   ${activeNode.tools.map(tool => `
-                    <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); padding: 5px 8px; border-radius: 4px; font-size: 11px;">
-                      🔌 ${escapeHtml(tool)}
+                    <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); padding: 5px 8px; border-radius: 4px; font-size: 11px; display: flex; align-items: center; gap: 6px; color: var(--text-main);">
+                      <span style="color: var(--azure-cyan); display: inline-flex;">${getIconSvg('plug', 12)}</span>
+                      <span>${escapeHtml(tool)}</span>
                     </div>
                   `).join('')}
                 </div>
@@ -1431,8 +1475,8 @@ function attachArchitectEvents() {
       const newNode = {
         id: `node-custom-${Date.now().toString().slice(-3)}`,
         role: `Specialist Agent #${newIndex}`,
-        avatar: '🧠',
-        model: 'Azure OpenAI o3-mini',
+        icon: 'cpu',
+        model: 'Azure AI Foundry (o3-mini)',
         desc: 'Executes domain-specific reasoning, policy verification, and structured output synthesis.',
         tools: ['Semantic Kernel Function Filter', 'Purview Audit Logger']
       };
@@ -1568,7 +1612,9 @@ function renderIntegrationView() {
                   <td>
                     <span class="badge-tag badge-purple">${escapeHtml(conn.businessProcess || conn.category)}</span>
                   </td>
-                  <td style="color: #94a3b8; font-size: 11px;">🛡️ ${escapeHtml(conn.security)}</td>
+                  <td style="color: #94a3b8; font-size: 11px;">
+                    <span style="display:inline-flex;align-items:center;gap:5px;"><span style="color:var(--azure-cyan);display:inline-flex;">${getIconSvg('shield', 12)}</span> ${escapeHtml(conn.security)}</span>
+                  </td>
                   <td><span class="badge-tag badge-green">${escapeHtml(conn.purviewBoundary)}</span></td>
                   <td id="conn-latency-${idx}" style="font-family: var(--font-mono); color: #38bdf8;">${escapeHtml(conn.latency)}</td>
                   <td>
@@ -1604,10 +1650,10 @@ function renderIntegrationView() {
           <div class="interactive-sandbox-box">
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
               <select id="rag-scenario-select" class="inline-select" style="flex: 1; padding: 8px 10px; font-size: 12px;">
-                <option value="sap">SAP S/4HANA: Reconcile Invoice #INV-88412 vs. PO #4500192</option>
-                <option value="dataverse">Dataverse CRM: Auto-Triage High-Severity Escalation #CAS-99104</option>
-                <option value="m365">M365 Graph & SharePoint: Synthesize EU Parental Leave & Equity Policy</option>
-                <option value="fabric">Fabric OneLake: Reroute Rotterdam Container Manifest #MSCU-7721</option>
+                <option value="sap">UiPath Orchestrator + Azure AI Foundry: Unattended 3-Way SAP PO Match (#INV-88412)</option>
+                <option value="dataverse">Copilot Studio + Power Platform: Auto-Triage High-Severity Escalation (#CAS-99104)</option>
+                <option value="m365">M365 Graph &amp; SharePoint: Synthesize EU Parental Leave &amp; Equity Policy</option>
+                <option value="fabric">Fabric OneLake: Reroute Rotterdam Container Manifest (#MSCU-7721)</option>
               </select>
               <button class="btn btn-primary btn-sm" id="btn-run-rag-test">
                 Execute Process Integration
@@ -1761,7 +1807,7 @@ function renderAIOpsView() {
         </div>
         <div class="view-actions">
           <button class="btn ${aiops.surgeActive ? 'btn-outline' : 'btn-primary'}" id="btn-simulate-surge">
-            ${aiops.surgeActive ? 'Normalize Traffic Load' : '⚡ Simulate PTU Traffic Surge'}
+            ${aiops.surgeActive ? 'Normalize Traffic Load' : `${getIconSvg('zap', 14)} Simulate PTU Traffic Surge`}
           </button>
           <div class="circuit-info">
             <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Circuit Breaker Failover</span>
@@ -1778,7 +1824,7 @@ function renderAIOpsView() {
         <div class="metric-card" style="--card-accent: #00d2ff;">
           <div class="metric-header">
             <span class="metric-title">Latency P95 (AOAI)</span>
-            <div class="metric-icon">⚡</div>
+            <div class="metric-icon">${getIconSvg('zap', 15)}</div>
           </div>
           <div class="metric-value">${aiops.latencyP95} ms</div>
           <div class="metric-footer">
@@ -1791,7 +1837,7 @@ function renderAIOpsView() {
         <div class="metric-card" style="--card-accent: #10b981;">
           <div class="metric-header">
             <span class="metric-title">Groundedness Index</span>
-            <div class="metric-icon">🎯</div>
+            <div class="metric-icon">${getIconSvg('target', 15)}</div>
           </div>
           <div class="metric-value">${aiops.groundedness}%</div>
           <div class="metric-footer">
@@ -1802,7 +1848,7 @@ function renderAIOpsView() {
         <div class="metric-card" style="--card-accent: #7c3aed;">
           <div class="metric-header">
             <span class="metric-title">Daily Token Throughput</span>
-            <div class="metric-icon">📊</div>
+            <div class="metric-icon">${getIconSvg('activity', 15)}</div>
           </div>
           <div class="metric-value">${aiops.dailyTokensM.toFixed(1)}M</div>
           <div class="metric-footer">
@@ -1813,7 +1859,7 @@ function renderAIOpsView() {
         <div class="metric-card" style="--card-accent: #ef4444;">
           <div class="metric-header">
             <span class="metric-title">Hallucination Rate</span>
-            <div class="metric-icon">🛡️</div>
+            <div class="metric-icon">${getIconSvg('shield', 15)}</div>
           </div>
           <div class="metric-value">${aiops.hallucinationRate}%</div>
           <div class="metric-footer">
@@ -2142,7 +2188,7 @@ function renderGovernanceView() {
                       <div style="font-size: 10px; color: var(--text-muted);">EU AI Act Risk Tier: <strong>${escapeHtml(initItem.risk)}</strong></div>
                     </div>
                     <span class="badge-tag ${isExposed ? 'badge-red' : 'badge-green'}">
-                      ${isExposed ? '⚠️ Policy Exception' : '✓ Verified'}
+                      ${isExposed ? 'Policy Exception' : 'Verified'}
                     </span>
                   </div>
                 `;
@@ -2153,7 +2199,8 @@ function renderGovernanceView() {
           <div class="dashboard-card">
             <div class="card-title-row">
               <h3>
-                🛡️ Interactive Red-Team & Content Safety Tester
+                <span style="color: var(--azure-cyan); display: inline-flex;">${getIconSvg('shield', 18)}</span>
+                Interactive Red-Team &amp; Content Safety Tester
               </h3>
               <span class="badge-tag badge-blue">Prompt Shield v2</span>
             </div>
@@ -2282,8 +2329,9 @@ function renderHorizonView() {
               <strong>Strategic Value:</strong> ${escapeHtml(item.impact)}
             </div>
             ${item.linkedInitiativeName ? `
-              <div style="font-size: 11px; color: #93c5fd; background: rgba(0, 120, 212, 0.12); padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(96, 165, 250, 0.25);">
-                🔗 Accelerates Portfolio Initiative: <strong>${escapeHtml(item.linkedInitiativeName)}</strong>
+              <div style="font-size: 11px; color: #93c5fd; background: rgba(0, 120, 212, 0.12); padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(96, 165, 250, 0.25); display: flex; align-items: center; gap: 6px;">
+                <span style="color: var(--azure-cyan); display: inline-flex;">${getIconSvg('link', 12)}</span>
+                <span>Accelerates Portfolio Initiative: <strong>${escapeHtml(item.linkedInitiativeName)}</strong></span>
               </div>
             ` : ''}
             <div style="margin-top: auto; padding-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
@@ -2561,8 +2609,9 @@ function showToast(message, type = 'info') {
   }
   const toast = document.createElement('div');
   toast.className = 'toast';
-  const icon = type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
-  toast.innerHTML = `<span>${icon}</span> <span>${escapeHtml(message)}</span>`;
+  const iconName = type === 'success' ? 'check' : type === 'warning' ? 'alert' : 'info';
+  const iconColor = type === 'success' ? '#34d399' : type === 'warning' ? '#fbbf24' : '#38bdf8';
+  toast.innerHTML = `<span style="color:${iconColor};display:inline-flex;">${getIconSvg(iconName, 15)}</span> <span>${escapeHtml(message)}</span>`;
   toastContainer.appendChild(toast);
 
   setTimeout(() => {
