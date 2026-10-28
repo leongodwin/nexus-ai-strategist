@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Nexus AI Strategist Hub - Enterprise platform to architect, build, govern, and monitor Microsoft AI solutions, multi-agent workflows, and intelligent automation." />
+  <title>Nexus AI Strategist Hub | Microsoft AI Enterprise Platform</title>
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body class="dark-theme">
+  <div id="app" class="app-layout">
+    
+    <!-- Top Global Header -->
+    <header class="app-header" id="global-header">
+      <div class="header-left">
+        <div class="brand-badge">
+          <div class="brand-icon">
+            <span class="azure-glow-dot"></span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+          </div>
+          <div class="brand-titles">
+            <span class="brand-name">NEXUS AI <span class="accent-text">STRATEGIST</span></span>
+            <span class="brand-sub">Microsoft Enterprise AI Operating System</span>
+          </div>
+        </div>
+
+        <div class="tenant-pill" id="tenant-status">
+          <span class="pulse-indicator online"></span>
+          <span class="tenant-label">Tenant: <strong>Contoso Global (Azure Commercial)</strong></span>
+          <span class="region-tag">East US 2</span>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="search-command-bar" id="search-bar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="global-search-input" autocomplete="off" placeholder="Search AI workflows, M365 systems, governance policies, KPIs... (Ctrl+K)" aria-label="Search AI workflows and resources" />
+          <kbd>Ctrl+K</kbd>
+        </div>
+        <div class="search-dropdown" id="global-search-results" style="display: none;" role="listbox" aria-label="Search Results"></div>
+      </div>
+
+      <div class="header-right">
+        <!-- Live Health Pills -->
+        <div class="health-badges">
+          <div class="health-item" title="Azure OpenAI Service Status">
+            <span class="health-dot active"></span>
+            <span>AOAI: 99.98%</span>
+          </div>
+          <div class="health-item" title="Microsoft Purview Policy Compliance">
+            <span class="health-dot shield"></span>
+            <span id="header-purview-status">Purview: 100% Compliant</span>
+          </div>
+        </div>
+
+        <button class="btn btn-outline btn-sm" id="btn-reset-demo" title="Reset Demo State to Factory Baseline">
+          Reset Demo
+        </button>
+
+        <button class="btn btn-outline" id="btn-quick-export" title="Export Solution Package">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Export Bicep / Spec
+        </button>
+
+        <button class="btn btn-primary" id="btn-new-initiative">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          New AI Initiative
+        </button>
+
+        <div class="avatar-profile" title="Chief AI Strategist & Solutions Architect">
+          <div class="avatar-circle">CS</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <div class="app-body">
+      
+      <!-- Left Vertical Navigation Bar -->
+      <nav class="sidebar-nav" id="main-navigation" aria-label="Main Navigation">
+        <div class="nav-section-title">STRATEGY & ARCHITECTURE</div>
+        
+        <button class="nav-tab active" data-view="discovery" id="nav-tab-discovery">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+          </svg>
+          <div class="nav-labels">
+            <span class="nav-primary">Opportunity & Value</span>
+            <span class="nav-secondary">Process Mining & ROI</span>
+          </div>
+          <span class="nav-badge" id="badge-opportunities">5 Active</span>
+        </button>
+
+        <button class="nav-tab" data-view="architect" id="nav-tab-architect">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          <div class="nav-labels">
+            <span class="nav-primary">Agent & Workflow Studio</span>
+            <span class="nav-secondary">Copilot & Semantic Kernel</span>
+          </div>
+          <span class="nav-badge-pill" id="badge-studio">5 Blueprints</span>
+        </button>
+
+        <button class="nav-tab" data-view="integration" id="nav-tab-integration">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+          <div class="nav-labels">
+            <span class="nav-primary">Enterprise Integration</span>
+            <span class="nav-secondary">M365, Fabric, Dataverse</span>
+          </div>
+          <span class="nav-badge-dot" title="All Gateways Online"></span>
+        </button>
+
+        <div class="nav-section-title">OPERATIONS & CONTROL</div>
+
+        <button class="nav-tab" data-view="aiops" id="nav-tab-aiops">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          <div class="nav-labels">
+            <span class="nav-primary">AIOps & Observability</span>
+            <span class="nav-secondary">SLA, Latency & Tokens</span>
+          </div>
+          <span class="live-tag">LIVE</span>
+        </button>
+
+        <button class="nav-tab" data-view="governance" id="nav-tab-governance">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <div class="nav-labels">
+            <span class="nav-primary">Governance & Security</span>
+            <span class="nav-secondary">Purview, NIST & EU AI Act</span>
+          </div>
+          <span class="nav-badge-check" id="badge-governance">100%</span>
+        </button>
+
+        <button class="nav-tab" data-view="horizon" id="nav-tab-horizon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="2"></circle>
+            <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path>
+          </svg>
+          <div class="nav-labels">
+            <span class="nav-primary">Horizon Tech Radar</span>
+            <span class="nav-secondary">Microsoft AI Evolution</span>
+          </div>
+          <span class="nav-badge-new" id="badge-horizon">4 New</span>
+        </button>
+
+        <!-- Bottom Sidebar Status -->
+        <div class="sidebar-footer">
+          <div class="quota-card">
+            <div class="quota-header">
+              <span>Azure PTU Capacity</span>
+              <span class="quota-val" id="sidebar-ptu-val">68%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="sidebar-ptu-fill" style="width: 68%;"></div>
+            </div>
+            <div class="quota-meta" id="sidebar-ptu-meta">820k / 1.2M Tokens/min</div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Stage Dynamic View Area -->
+      <main class="main-stage" id="main-content" role="main">
+        <!-- Views will be dynamically loaded and controlled here -->
+      </main>
+
+    </div>
+
+    <!-- Global Initiative Creation / Specification Modal -->
+    <div class="modal-overlay" id="initiative-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-init-heading">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <div class="modal-icon-badge">✨</div>
+            <div>
+              <h2 class="modal-title" id="modal-init-heading">Draft Strategic AI Initiative</h2>
+              <p class="modal-subtitle">Define business friction, architectural targets, and target ROI</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="modal-close" aria-label="Close modal">&times;</button>
+        </div>
+        
+        <form id="initiative-form" class="modal-form">
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label for="init-title">Initiative Title</label>
+              <input type="text" id="init-title" required placeholder="e.g. Autonomous Customer Case Resolution Agent" />
+            </div>
+            <div class="form-group flex-1">
+              <label for="init-dept">Business Department</label>
+              <select id="init-dept">
+                <option value="Customer Operations">Customer Operations</option>
+                <option value="Finance & Accounting">Finance & Accounting</option>
+                <option value="Supply Chain & Logistics">Supply Chain & Logistics</option>
+                <option value="Human Resources">Human Resources</option>
+                <option value="Legal & Compliance">Legal & Compliance</option>
+                <option value="IT & Engineering">IT & Engineering</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="init-problem">Operational Friction / Business Problem</label>
+            <textarea id="init-problem" rows="3" placeholder="Describe manual effort, current cycle times, failure rates, or pain points..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="init-architecture">Primary Microsoft AI Stack</label>
+              <select id="init-architecture">
+                <option value="Copilot Studio + Power Automate + Dataverse">Copilot Studio + Power Automate + Dataverse</option>
+                <option value="Azure OpenAI + Semantic Kernel + Azure AI Search">Azure OpenAI + Semantic Kernel + Azure AI Search</option>
+                <option value="Azure AI Agent Service + Microsoft Fabric OneLake">Azure AI Agent Service + Microsoft Fabric OneLake</option>
+                <option value="Microsoft 365 Copilot Custom Engine + Graph API">M365 Copilot Custom Engine + Graph API</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label for="init-hours-saved">Est. Annual Hours Saved</label>
+              <input type="number" id="init-hours-saved" value="4500" min="100" step="100" />
+            </div>
+            <div class="form-group flex-1">
+              <label for="init-hourly-rate">Loaded Hourly Cost ($)</label>
+              <input type="number" id="init-hourly-rate" value="65" min="20" step="5" />
+            </div>
+            <div class="form-group flex-1">
+              <label for="init-api-cost">Annual Cloud/API Cost ($)</label>
+              <input type="number" id="init-api-cost" value="18000" min="1000" step="1000" />
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" id="modal-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="modal-submit">
+              <span>Synthesize Strategy & Generate Architecture</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="export-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-export-heading">
+      <div class="modal-card modal-lg">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <div class="modal-icon-badge">📦</div>
+            <div>
+              <h2 class="modal-title" id="modal-export-heading">Export Enterprise Architecture Package</h2>
+              <p class="modal-subtitle" id="modal-export-subtitle">Ready-to-deploy Azure Bicep IaC, Copilot Studio Manifest, and Solution Spec</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="export-close" aria-label="Close export modal">&times;</button>
+        </div>
+        <div class="export-tabs">
+          <button class="export-tab active" data-export="bicep">Azure Bicep (IaC)</button>
+          <button class="export-tab" data-export="copilot">Copilot Studio Agent Manifest</button>
+          <button class="export-tab" data-export="sk">Semantic Kernel Orchestrator (C# / Py)</button>
+          <button class="export-tab" data-export="purview">Purview Governance Policy JSON</button>
+          <button class="export-tab" data-export="exec">Executive Steering Brief (MD)</button>
+        </div>
+        <div class="export-content">
+          <pre><code id="export-code-display" class="code-block"></code></pre>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-outline" id="btn-copy-code">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Snippet
+          </button>
+          <button class="btn btn-primary" id="btn-download-package">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download Complete ZIP Bundle
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
