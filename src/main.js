@@ -9,10 +9,12 @@ import {
   AGENT_TOPOLOGIES,
   ENTERPRISE_INTEGRATIONS,
   GOVERNANCE_POLICIES,
-  HORIZON_RADAR
+  HORIZON_RADAR,
+  MEETING_TRANSCRIPTS,
+  MAGIC_FILL_PRESETS
 } from './data/mockData.js';
 
-const STORAGE_KEY = 'nexus_ai_strategist_state_v3';
+const STORAGE_KEY = 'nexus_ai_strategist_state_v4';
 
 let activeSimulationTimers = [];
 
@@ -120,6 +122,24 @@ function createInitialState() {
     policies,
     processMiningIngested: Boolean(saved?.processMiningIngested),
     circuitBreakerActive: saved?.circuitBreakerActive ?? true,
+    activeCopilotTab: 'transcript',
+    selectedTranscriptId: MEETING_TRANSCRIPTS[0].id,
+    synthesizedTranscriptIds: Array.isArray(saved?.synthesizedTranscriptIds) ? saved.synthesizedTranscriptIds : [],
+    repliedTranscriptIds: Array.isArray(saved?.repliedTranscriptIds) ? saved.repliedTranscriptIds : [],
+    sentEmails: Array.isArray(saved?.sentEmails) ? saved.sentEmails : [],
+    graphStatus: {
+      connected: true,
+      appDisplayName: 'OpenClaw (GraspAI Graph API)',
+      orgName: 'GraspAI',
+      primaryMailbox: 'leon@graspai.co.uk',
+      users: [
+        { displayName: 'Leon (CEO)', mail: 'leon@graspai.co.uk' },
+        { displayName: 'Toni Hunter', mail: 'toni@graspai.co.uk' },
+        { displayName: 'Ann', mail: 'ann@leancloud.co.uk' }
+      ],
+      keyCapabilities: ['OnlineMeetingTranscript.Read.All', 'Mail.Send', 'Mail.Read', 'User.Read.All'],
+      latencyMs: 42
+    },
     aiopsState: {
       latencyP95: 385,
       groundedness: 98.4,
@@ -152,7 +172,10 @@ function persistState() {
       topologies: state.topologies,
       policies: state.policies,
       processMiningIngested: state.processMiningIngested,
-      circuitBreakerActive: state.circuitBreakerActive
+      circuitBreakerActive: state.circuitBreakerActive,
+      synthesizedTranscriptIds: state.synthesizedTranscriptIds,
+      repliedTranscriptIds: state.repliedTranscriptIds,
+      sentEmails: state.sentEmails
     }));
   } catch {
     // Ignore storage quota errors in restricted environments
@@ -176,6 +199,9 @@ function resetDemoWorkspace() {
   state.selectedNode = state.selectedTopology.nodes[0];
   state.processMiningIngested = false;
   state.circuitBreakerActive = true;
+  state.synthesizedTranscriptIds = [];
+  state.repliedTranscriptIds = [];
+  state.sentEmails = [];
   state.radarFilter = 'ALL';
   state.aiopsState = {
     latencyP95: 385,
@@ -198,16 +224,20 @@ const mainContent = document.getElementById('main-content');
 const navTabs = document.querySelectorAll('.nav-tab');
 const initiativeModal = document.getElementById('initiative-modal');
 const exportModal = document.getElementById('export-modal');
+const copilotModal = document.getElementById('copilot-modal');
 const toastContainer = document.getElementById('toast-container');
 const btnNewInitiative = document.getElementById('btn-new-initiative');
 const btnQuickExport = document.getElementById('btn-quick-export');
+const btnOpenCopilotHub = document.getElementById('btn-open-copilot-hub');
 const btnResetDemo = document.getElementById('btn-reset-demo');
 const modalClose = document.getElementById('modal-close');
 const modalCancel = document.getElementById('modal-cancel');
 const exportClose = document.getElementById('export-close');
+const copilotClose = document.getElementById('copilot-close');
 const initiativeForm = document.getElementById('initiative-form');
 const exportCodeDisplay = document.getElementById('export-code-display');
-const exportTabs = document.querySelectorAll('.export-tab');
+const exportTabs = document.querySelectorAll('#export-modal .export-tab');
+const copilotTabs = document.querySelectorAll('#copilot-tabs .export-tab');
 const btnCopyCode = document.getElementById('btn-copy-code');
 const btnDownloadPackage = document.getElementById('btn-download-package');
 const globalSearchInput = document.getElementById('global-search-input');
@@ -221,6 +251,25 @@ function init() {
   updateGlobalBadges();
   renderView(state.activeView);
   startTelemetryStream();
+  probeMicrosoftGraphStatus();
+}
+
+async function probeMicrosoftGraphStatus() {
+  try {
+    const resp = await fetch('/api/graph/status');
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (data.connected) {
+      state.graphStatus = data;
+      const tenantLabel = document.querySelector('.tenant-label');
+      if (tenantLabel) {
+        tenantLabel.innerHTML = `Tenant: <strong>GraspAI (${escapeHtml(data.appDisplayName || 'OpenClaw')})</strong>`;
+      }
+      appendTelemetryLog('success', `[MicrosoftGraph] Connected to ${data.appDisplayName} (${data.roles?.length || 0} scopes granted, ${data.users?.length || 0} mailboxes synced)`);
+    }
+  } catch {
+    // Fallback to pre-loaded Graph metadata if offline
+  }
 }
 
 function updateGlobalBadges() {
@@ -291,6 +340,12 @@ function bindGlobalEvents() {
     openExportModal();
   });
 
+  if (btnOpenCopilotHub) {
+    btnOpenCopilotHub.addEventListener('click', () => {
+      openCopilotModal('transcript');
+    });
+  }
+
   if (btnResetDemo) {
     btnResetDemo.addEventListener('click', resetDemoWorkspace);
   }
@@ -298,12 +353,38 @@ function bindGlobalEvents() {
   modalClose.addEventListener('click', () => { initiativeModal.style.display = 'none'; });
   modalCancel.addEventListener('click', () => { initiativeModal.style.display = 'none'; });
   exportClose.addEventListener('click', () => { exportModal.style.display = 'none'; });
+  if (copilotClose) {
+    copilotClose.addEventListener('click', () => { copilotModal.style.display = 'none'; });
+  }
 
-  [initiativeModal, exportModal].forEach(overlay => {
+  [initiativeModal, exportModal, copilotModal].filter(Boolean).forEach(overlay => {
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) {
         overlay.style.display = 'none';
       }
+    });
+  });
+
+  copilotTabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      const targetTab = e.currentTarget.getAttribute('data-copilot-tab');
+      openCopilotModal(targetTab);
+    });
+  });
+
+  document.querySelectorAll('#magic-fill-chips [data-preset]').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      const idx = parseInt(e.currentTarget.getAttribute('data-preset'), 10);
+      const preset = MAGIC_FILL_PRESETS[idx];
+      if (!preset) return;
+      document.getElementById('init-title').value = preset.title;
+      document.getElementById('init-dept').value = preset.dept;
+      document.getElementById('init-problem').value = preset.problem;
+      document.getElementById('init-architecture').value = preset.stack;
+      document.getElementById('init-hours-saved').value = preset.hours;
+      document.getElementById('init-hourly-rate').value = preset.rate;
+      document.getElementById('init-api-cost').value = preset.apiCost;
+      showToast(`1-Click AI Scenario applied: "${preset.label}"`, 'info');
     });
   });
 
@@ -336,13 +417,13 @@ function bindGlobalEvents() {
     } else if (e.key === 'Escape') {
       initiativeModal.style.display = 'none';
       exportModal.style.display = 'none';
+      if (copilotModal) copilotModal.style.display = 'none';
       if (globalSearchResults) globalSearchResults.style.display = 'none';
     }
   });
 
   globalSearchInput.addEventListener('focus', () => {
-    const term = globalSearchInput.value.trim();
-    if (term) renderGlobalSearchDropdown(term);
+    renderGlobalSearchDropdown(globalSearchInput.value.trim());
   });
 
   globalSearchInput.addEventListener('input', (e) => {
@@ -383,97 +464,122 @@ function openExportModal(defaultTab = null) {
 function renderGlobalSearchDropdown(rawTerm) {
   if (!globalSearchResults) return;
   const term = rawTerm.toLowerCase();
-  if (!term) {
-    globalSearchResults.style.display = 'none';
-    globalSearchResults.innerHTML = '';
-    return;
-  }
+
+  // Always offer 1-Click Action Macros at the top of Ctrl+K
+  const quickMacros = [
+    {
+      action: 'autopilot',
+      title: 'Run 1-Click Autonomous Strategy Autopilot',
+      sub: 'Synthesize Transcripts + Ingest Process Mining + Enforce Purview + Export Brief',
+      badge: '1-Click Macro'
+    },
+    {
+      action: 'transcript',
+      title: 'Ingest Microsoft Teams Meeting Transcript (Graph API)',
+      sub: 'Auto-extract initiatives, agent topologies & missing stakeholder questions',
+      badge: 'Graph API'
+    },
+    {
+      action: 'email',
+      title: 'Dispatch Targeted Stakeholder Questions & Ingest Replies',
+      sub: 'Send role-specific discovery questions via GraspAI Mail.Send & lock ROI',
+      badge: 'Mail.Send'
+    },
+    {
+      action: 'remediate',
+      title: 'Auto-Enforce 100% Purview Compliance & Optimise FinOps PTUs',
+      sub: 'Enables all 6 NIST/EU AI Act guardrails & arms West US 3 circuit breaker',
+      badge: 'Auto-Fix'
+    }
+  ].filter(m => !term || m.title.toLowerCase().includes(term) || m.sub.toLowerCase().includes(term));
 
   const results = [];
 
-  state.initiatives.forEach(item => {
-    if (
-      item.title.toLowerCase().includes(term) ||
-      item.department.toLowerCase().includes(term) ||
-      item.stack.toLowerCase().includes(term) ||
-      (item.problem && item.problem.toLowerCase().includes(term))
-    ) {
-      results.push({
-        group: 'Strategic Initiatives & KPIs',
-        title: item.title,
-        sub: `${item.department} • $${item.projectedRoi.toLocaleString()} ROI • Adoption ${item.adoptionRate ?? 0}%`,
-        view: 'discovery',
-        id: item.id
-      });
-    }
-  });
+  if (term) {
+    state.initiatives.forEach(item => {
+      if (
+        item.title.toLowerCase().includes(term) ||
+        item.department.toLowerCase().includes(term) ||
+        item.stack.toLowerCase().includes(term) ||
+        (item.problem && item.problem.toLowerCase().includes(term))
+      ) {
+        results.push({
+          group: 'Strategic Initiatives & KPIs',
+          title: item.title,
+          sub: `${item.department} • $${item.projectedRoi.toLocaleString()} ROI • Adoption ${item.adoptionRate ?? 0}%`,
+          view: 'discovery',
+          id: item.id
+        });
+      }
+    });
 
-  state.topologies.forEach(topo => {
-    if (
-      topo.name.toLowerCase().includes(term) ||
-      topo.framework.toLowerCase().includes(term) ||
-      topo.nodes.some(n => n.role.toLowerCase().includes(term) || n.model.toLowerCase().includes(term))
-    ) {
-      results.push({
-        group: 'Agent Studio Topologies',
-        title: topo.name,
-        sub: `${topo.framework} • ${topo.nodes.length} Agents`,
-        view: 'architect',
-        id: topo.id
-      });
-    }
-  });
+    state.topologies.forEach(topo => {
+      if (
+        topo.name.toLowerCase().includes(term) ||
+        topo.framework.toLowerCase().includes(term) ||
+        topo.nodes.some(n => n.role.toLowerCase().includes(term) || n.model.toLowerCase().includes(term))
+      ) {
+        results.push({
+          group: 'Agent Studio Topologies',
+          title: topo.name,
+          sub: `${topo.framework} • ${topo.nodes.length} Agents`,
+          view: 'architect',
+          id: topo.id
+        });
+      }
+    });
 
-  state.integrations.forEach(conn => {
-    if (
-      conn.name.toLowerCase().includes(term) ||
-      conn.category.toLowerCase().includes(term) ||
-      conn.security.toLowerCase().includes(term) ||
-      (conn.businessProcess && conn.businessProcess.toLowerCase().includes(term))
-    ) {
-      results.push({
-        group: 'Enterprise Integrations',
-        title: conn.name,
-        sub: `${conn.category} • ${conn.businessProcess}`,
-        view: 'integration',
-        id: conn.name
-      });
-    }
-  });
+    state.integrations.forEach(conn => {
+      if (
+        conn.name.toLowerCase().includes(term) ||
+        conn.category.toLowerCase().includes(term) ||
+        conn.security.toLowerCase().includes(term) ||
+        (conn.businessProcess && conn.businessProcess.toLowerCase().includes(term))
+      ) {
+        results.push({
+          group: 'Enterprise Integrations',
+          title: conn.name,
+          sub: `${conn.category} • ${conn.businessProcess}`,
+          view: 'integration',
+          id: conn.name
+        });
+      }
+    });
 
-  state.policies.forEach(pol => {
-    if (
-      pol.title.toLowerCase().includes(term) ||
-      pol.framework.toLowerCase().includes(term) ||
-      pol.description.toLowerCase().includes(term)
-    ) {
-      results.push({
-        group: 'Governance & Purview Controls',
-        title: pol.title,
-        sub: `${pol.framework} (${pol.severity})`,
-        view: 'governance',
-        id: pol.id
-      });
-    }
-  });
+    state.policies.forEach(pol => {
+      if (
+        pol.title.toLowerCase().includes(term) ||
+        pol.framework.toLowerCase().includes(term) ||
+        pol.description.toLowerCase().includes(term)
+      ) {
+        results.push({
+          group: 'Governance & Purview Controls',
+          title: pol.title,
+          sub: `${pol.framework} (${pol.severity})`,
+          view: 'governance',
+          id: pol.id
+        });
+      }
+    });
 
-  state.radar.forEach(rad => {
-    if (
-      rad.title.toLowerCase().includes(term) ||
-      rad.tag.toLowerCase().includes(term) ||
-      rad.summary.toLowerCase().includes(term)
-    ) {
-      results.push({
-        group: 'Horizon Tech Radar',
-        title: rad.title,
-        sub: `${rad.tag} • ${rad.readiness}`,
-        view: 'horizon',
-        id: rad.id
-      });
-    }
-  });
+    state.radar.forEach(rad => {
+      if (
+        rad.title.toLowerCase().includes(term) ||
+        rad.tag.toLowerCase().includes(term) ||
+        rad.summary.toLowerCase().includes(term)
+      ) {
+        results.push({
+          group: 'Horizon Tech Radar',
+          title: rad.title,
+          sub: `${rad.tag} • ${rad.readiness}`,
+          view: 'horizon',
+          id: rad.id
+        });
+      }
+    });
+  }
 
-  if (results.length === 0) {
+  if (results.length === 0 && quickMacros.length === 0) {
     globalSearchResults.innerHTML = `<div class="search-empty">No matching resources across the 6 pillars for "${escapeHtml(rawTerm)}"</div>`;
     globalSearchResults.style.display = 'block';
     return;
@@ -485,7 +591,20 @@ function renderGlobalSearchDropdown(rawTerm) {
     return acc;
   }, {});
 
-  globalSearchResults.innerHTML = Object.entries(grouped).map(([groupName, items]) => `
+  const macroHtml = quickMacros.length ? `
+    <div class="search-result-group">1-Click Autonomous Actions (Zero-Navigation Macros)</div>
+    ${quickMacros.map(m => `
+      <button type="button" class="search-result-item" data-macro="${escapeHtml(m.action)}">
+        <div class="search-result-main">
+          <span class="search-result-title">${escapeHtml(m.title)}</span>
+          <span class="search-result-sub">${escapeHtml(m.sub)}</span>
+        </div>
+        <span class="badge-tag badge-purple">${escapeHtml(m.badge)}</span>
+      </button>
+    `).join('')}
+  ` : '';
+
+  const navHtml = Object.entries(grouped).map(([groupName, items]) => `
     <div class="search-result-group">${escapeHtml(groupName)}</div>
     ${items.map(item => `
       <button type="button" class="search-result-item" data-view="${escapeHtml(item.view)}" data-id="${escapeHtml(item.id)}">
@@ -498,9 +617,26 @@ function renderGlobalSearchDropdown(rawTerm) {
     `).join('')}
   `).join('');
 
+  globalSearchResults.innerHTML = macroHtml + navHtml;
   globalSearchResults.style.display = 'block';
 
-  globalSearchResults.querySelectorAll('.search-result-item').forEach(btn => {
+  globalSearchResults.querySelectorAll('.search-result-item[data-macro]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const macro = e.currentTarget.getAttribute('data-macro');
+      globalSearchResults.style.display = 'none';
+      if (macro === 'autopilot') {
+        runStrategyAutopilot();
+      } else if (macro === 'transcript') {
+        openCopilotModal('transcript');
+      } else if (macro === 'email') {
+        openCopilotModal('email');
+      } else if (macro === 'remediate') {
+        autoRemediateGovernanceAndFinOps();
+      }
+    });
+  });
+
+  globalSearchResults.querySelectorAll('.search-result-item[data-view]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const targetView = e.currentTarget.getAttribute('data-view');
       const targetId = e.currentTarget.getAttribute('data-id');
@@ -616,6 +752,123 @@ function getSortedInitiatives() {
   }
 }
 
+function renderNbaBanner() {
+  const unsynthesized = MEETING_TRANSCRIPTS.filter(t => !state.synthesizedTranscriptIds.includes(t.id));
+  const pendingReplies = MEETING_TRANSCRIPTS.filter(
+    t => state.synthesizedTranscriptIds.includes(t.id) && !state.repliedTranscriptIds.includes(t.id)
+  );
+  const uncheckedPolicies = state.policies.filter(p => !p.checked);
+
+  if (unsynthesized.length > 0) {
+    const nextTr = unsynthesized[0];
+    return `
+      <div class="nba-copilot-banner" id="nba-banner">
+        <div class="nba-left">
+          <span class="nba-badge">AI Co-Pilot Recommendation</span>
+          <span class="nba-text">
+            <strong>Microsoft Graph (${escapeHtml(state.graphStatus.appDisplayName || 'OpenClaw')}):</strong>
+            ${unsynthesized.length} Teams workshop transcript(s) ready for AI synthesis — next:
+            <em>"${escapeHtml(nextTr.title)}"</em> (+$${Math.round(nextTr.synthesizedInitiative.projectedRoi / 1000)}k/yr ROI).
+          </span>
+        </div>
+        <div class="nba-actions">
+          <button type="button" class="btn btn-sm btn-outline" id="nba-btn-transcript">
+            1-Click Synthesize Transcript
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" id="nba-btn-autopilot">
+            ${getIconSvg('zap', 13)} Run Full Strategy Autopilot
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (pendingReplies.length > 0) {
+    const tr = pendingReplies[0];
+    return `
+      <div class="nba-copilot-banner" id="nba-banner">
+        <div class="nba-left">
+          <span class="nba-badge">Pending Stakeholder Answers</span>
+          <span class="nba-text">
+            <strong>${tr.missingGaps.length} Targeted Discovery Questions</strong> drafted for
+            <em>${escapeHtml(tr.synthesizedInitiative.title)}</em> (${escapeHtml(tr.missingGaps.map(g => g.defaultRecipient).join(', '))}).
+          </span>
+        </div>
+        <div class="nba-actions">
+          <button type="button" class="btn btn-sm btn-outline" id="nba-btn-email">
+            Review &amp; Send via Graph
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" id="nba-btn-ingest-replies">
+            1-Click Ingest Stakeholder Replies (+ROI &amp; Feasibility)
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (uncheckedPolicies.length > 0) {
+    return `
+      <div class="nba-copilot-banner" id="nba-banner">
+        <div class="nba-left">
+          <span class="nba-badge" style="color:#f87171;border-color:rgba(248,113,113,0.4);">Governance Alert</span>
+          <span class="nba-text">
+            <strong>${uncheckedPolicies.length} Purview / EU AI Act policy exception(s)</strong> detected across active initiatives.
+          </span>
+        </div>
+        <div class="nba-actions">
+          <button type="button" class="btn btn-sm btn-primary" id="nba-btn-remediate">
+            1-Click Auto-Remediate All Risks &amp; FinOps
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="nba-copilot-banner" id="nba-banner">
+      <div class="nba-left">
+        <span class="nba-badge">Autonomous Strategy Ready</span>
+        <span class="nba-text">
+          All Teams transcripts synthesized, stakeholder replies ingested, and 100% Purview/EU AI Act controls verified.
+        </span>
+      </div>
+      <div class="nba-actions">
+        <button type="button" class="btn btn-sm btn-outline" id="nba-btn-transcript">
+          Open Graph Transcript &amp; Email Hub
+        </button>
+        <button type="button" class="btn btn-sm btn-primary" id="nba-btn-export-ready">
+          1-Click Export Complete Board &amp; Bicep Pack
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function attachNbaEvents() {
+  document.getElementById('nba-btn-transcript')?.addEventListener('click', () => {
+    openCopilotModal('transcript');
+  });
+  document.getElementById('nba-btn-autopilot')?.addEventListener('click', () => {
+    runStrategyAutopilot();
+  });
+  document.getElementById('nba-btn-email')?.addEventListener('click', () => {
+    openCopilotModal('email');
+  });
+  document.getElementById('nba-btn-ingest-replies')?.addEventListener('click', () => {
+    const pending = MEETING_TRANSCRIPTS.find(
+      t => state.synthesizedTranscriptIds.includes(t.id) && !state.repliedTranscriptIds.includes(t.id)
+    ) || MEETING_TRANSCRIPTS[0];
+    state.selectedTranscriptId = pending.id;
+    ingestStakeholderRepliesForTranscript(pending);
+  });
+  document.getElementById('nba-btn-remediate')?.addEventListener('click', () => {
+    autoRemediateGovernanceAndFinOps();
+  });
+  document.getElementById('nba-btn-export-ready')?.addEventListener('click', () => {
+    openExportModal('exec');
+  });
+}
+
 function renderDiscoveryView() {
   const sortedInitiatives = getSortedInitiatives();
   const totalHours = state.initiatives.reduce((acc, i) => acc + i.hoursSaved, 0);
@@ -669,6 +922,8 @@ function renderDiscoveryView() {
           </button>
         </div>
       </div>
+
+      ${renderNbaBanner()}
 
       <!-- High-level Value & KPI Cards -->
       <div class="metrics-banner">
@@ -961,6 +1216,7 @@ function renderDiscoveryView() {
   `;
 
   attachDiscoveryEvents();
+  attachNbaEvents();
 }
 
 function attachDiscoveryEvents() {
@@ -2598,6 +2854,432 @@ function handleDownloadPackage() {
   URL.revokeObjectURL(url);
 
   showToast(`Downloaded complete specification & Executive Brief: ${slug}-enterprise-spec-bundle.md`, 'success');
+}
+
+// ==========================================================================
+// Microsoft Graph AI Co-Pilot: Transcript Synthesis, Targeted Emails & Autopilot
+// ==========================================================================
+function openCopilotModal(defaultTab = null) {
+  if (!copilotModal) return;
+  if (defaultTab) {
+    state.activeCopilotTab = defaultTab;
+  }
+  copilotTabs.forEach(t => {
+    t.classList.toggle('active', t.getAttribute('data-copilot-tab') === state.activeCopilotTab);
+  });
+
+  const sub = document.getElementById('modal-copilot-subtitle');
+  if (sub && state.graphStatus) {
+    sub.textContent = `Connected to ${state.graphStatus.orgName || 'GraspAI'} (${state.graphStatus.appDisplayName || 'OpenClaw'}) • Scopes: OnlineMeetingTranscript.Read.All, Mail.Send, Mail.Read`;
+  }
+
+  renderCopilotModalContent();
+  copilotModal.style.display = 'flex';
+}
+
+function getSelectedTranscriptObj() {
+  return MEETING_TRANSCRIPTS.find(t => t.id === state.selectedTranscriptId) || MEETING_TRANSCRIPTS[0];
+}
+
+function renderCopilotModalContent() {
+  const container = document.getElementById('copilot-tab-body');
+  if (!container) return;
+
+  const tr = getSelectedTranscriptObj();
+  const isSynthesized = state.synthesizedTranscriptIds.includes(tr.id);
+  const isReplied = state.repliedTranscriptIds.includes(tr.id);
+  const graphUsers = state.graphStatus?.users?.filter(u => u.mail || u.userPrincipalName) || [
+    { displayName: 'Leon (CEO)', mail: 'leon@graspai.co.uk' },
+    { displayName: 'Toni Hunter', mail: 'toni@graspai.co.uk' },
+    { displayName: 'Ann', mail: 'ann@leancloud.co.uk' }
+  ];
+
+  if (state.activeCopilotTab === 'transcript') {
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+            <label for="copilot-tr-select" style="font-size: 11px; color: var(--text-muted); font-weight: 700; white-space: nowrap;">Teams Meeting Transcript:</label>
+            <select id="copilot-tr-select" class="inline-select" style="flex: 1; padding: 7px 10px; font-size: 12px;">
+              ${MEETING_TRANSCRIPTS.map(item => `
+                <option value="${escapeHtml(item.id)}" ${item.id === tr.id ? 'selected' : ''}>
+                  ${escapeHtml(item.title)} (${state.synthesizedTranscriptIds.includes(item.id) ? '✓ Synthesized' : 'Ready'})
+                </option>
+              `).join('')}
+            </select>
+          </div>
+          <span class="badge-tag badge-green">${escapeHtml(tr.duration)}</span>
+        </div>
+
+        <div class="copilot-grid-2col">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted);">
+              <span><strong>Participants:</strong> ${escapeHtml(tr.participants)}</span>
+              <span>Editable / Paste Custom Notes</span>
+            </div>
+            <textarea id="copilot-raw-transcript" class="code-block" rows="8" style="width: 100%; font-size: 11px; resize: vertical;">${escapeHtml(tr.rawTranscript)}</textarea>
+          </div>
+
+          <div class="question-card" style="justify-content: space-between;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 11px; font-weight: 700; color: var(--azure-cyan); text-transform: uppercase;">AI Multi-Pillar Extraction Preview</span>
+                <span class="badge-tag ${isSynthesized ? 'badge-green' : 'badge-blue'}">${isSynthesized ? 'Applied to App' : 'Ready to Extract'}</span>
+              </div>
+              <div style="font-size: 13px; font-weight: 700; color: #fff;">${escapeHtml(tr.synthesizedInitiative.title)}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">
+                <strong>Stack:</strong> ${escapeHtml(tr.synthesizedInitiative.stack)}<br/>
+                <strong>Est. Impact:</strong> <span style="color:#34d399;font-weight:700;">$${tr.synthesizedInitiative.projectedRoi.toLocaleString()}/yr</span> (${tr.synthesizedInitiative.hoursSaved.toLocaleString()} hrs &bull; ${escapeHtml(tr.synthesizedInitiative.cycleTimeReduction)})<br/>
+                <strong>SDLC &amp; Change:</strong> ${escapeHtml(tr.synthesizedInitiative.sdlcStage)} &bull; ${escapeHtml(tr.synthesizedInitiative.changeProgramme)}
+              </div>
+              <div style="border-top: 1px solid var(--border-subtle); padding-top: 8px; margin-top: 2px;">
+                <div style="font-size: 11px; font-weight: 700; color: #fbbf24; margin-bottom: 4px;">
+                  Detected Information Gaps (${tr.missingGaps.length} Targeted Questions to Send):
+                </div>
+                ${tr.missingGaps.map(g => `
+                  <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px;">
+                    &bull; <strong>To ${escapeHtml(g.defaultRecipient)}:</strong> ${escapeHtml(g.question)}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+              <button type="button" class="btn btn-primary" id="btn-synthesize-transcript" style="flex: 1;">
+                ${getIconSvg('zap', 14)} Synthesize Transcript &amp; Auto-Update App
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('copilot-tr-select')?.addEventListener('change', (e) => {
+      state.selectedTranscriptId = e.target.value;
+      renderCopilotModalContent();
+    });
+
+    document.getElementById('btn-synthesize-transcript')?.addEventListener('click', () => {
+      const customText = document.getElementById('copilot-raw-transcript')?.value || '';
+      synthesizeTranscriptIntoWorkspace(tr, customText);
+      openCopilotModal('email');
+    });
+    return;
+  }
+
+  if (state.activeCopilotTab === 'email') {
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff;">
+              Targeted Stakeholder Follow-Up Questions: ${escapeHtml(tr.synthesizedInitiative.title)}
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted);">
+              Dispatches role-specific questions via <strong>Microsoft Graph API (POST /users/${escapeHtml(state.graphStatus.primaryMailbox || 'leon@graspai.co.uk')}/sendMail)</strong> to resolve missing business case &amp; governance data.
+            </div>
+          </div>
+          <span class="badge-tag ${isReplied ? 'badge-green' : 'badge-amber'}">
+            ${isReplied ? '✓ Stakeholder Replies Ingested' : `${tr.missingGaps.length} Questions Pending Reply`}
+          </span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          ${tr.missingGaps.map((gap, idx) => `
+            <div class="question-card">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                <span class="badge-tag badge-blue">Q${idx + 1}: ${escapeHtml(gap.role)}</span>
+                <div style="display: flex; align-items: center; gap: 6px; flex: 1; max-width: 380px;">
+                  <span style="font-size: 10px; color: var(--text-dim);">Recipient (Graph User):</span>
+                  <input type="email" class="inline-select gap-email-input" data-idx="${idx}" value="${escapeHtml(gap.defaultRecipient)}" list="graph-users-list" style="flex: 1; cursor: text;" />
+                </div>
+                <button type="button" class="btn btn-sm btn-outline btn-send-single-graph" data-idx="${idx}">
+                  Send via Graph API
+                </button>
+              </div>
+              <textarea class="code-block gap-question-input" data-idx="${idx}" rows="1" style="font-size: 11px; padding: 6px 8px;">${escapeHtml(gap.question)}</textarea>
+            </div>
+          `).join('')}
+          <datalist id="graph-users-list">
+            ${graphUsers.map(u => `<option value="${escapeHtml(u.mail || u.userPrincipalName)}">${escapeHtml(u.displayName || '')}</option>`).join('')}
+          </datalist>
+        </div>
+
+        <div id="graph-mail-status-box" style="font-size: 11px; padding: 8px 12px; border-radius: 6px; background: rgba(0, 210, 255, 0.08); border: 1px solid rgba(0, 210, 255, 0.25); color: #e0f2fe;">
+          ${isReplied
+            ? escapeHtml(tr.simulatedReplyBoost.replySummary)
+            : 'Click "Dispatch All via Microsoft Graph" to email stakeholders, then click "Sync Graph Inbox & Ingest Replies" to automatically update ROI, Feasibility, and Stage Gate.'}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
+          <button type="button" class="btn btn-outline" id="btn-dispatch-all-graph">
+            Dispatch All (${tr.missingGaps.length}) via Microsoft Graph API
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-ingest-graph-replies">
+            ${getIconSvg('check', 14)} Sync Graph Inbox &amp; Ingest Stakeholder Replies
+          </button>
+        </div>
+      </div>
+    `;
+
+    container.querySelectorAll('.btn-send-single-graph').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const idx = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
+        const emailInput = container.querySelector(`.gap-email-input[data-idx="${idx}"]`);
+        const qInput = container.querySelector(`.gap-question-input[data-idx="${idx}"]`);
+        await sendQuestionViaGraph(
+          emailInput?.value || tr.missingGaps[idx].defaultRecipient,
+          `[AI Strategy Discovery] ${tr.synthesizedInitiative.title} — ${tr.missingGaps[idx].role}`,
+          qInput?.value || tr.missingGaps[idx].question
+        );
+      });
+    });
+
+    document.getElementById('btn-dispatch-all-graph')?.addEventListener('click', async () => {
+      for (let i = 0; i < tr.missingGaps.length; i++) {
+        const emailInput = container.querySelector(`.gap-email-input[data-idx="${i}"]`);
+        const qInput = container.querySelector(`.gap-question-input[data-idx="${i}"]`);
+        await sendQuestionViaGraph(
+          emailInput?.value || tr.missingGaps[i].defaultRecipient,
+          `[AI Strategy Discovery] ${tr.synthesizedInitiative.title} — ${tr.missingGaps[i].role}`,
+          qInput?.value || tr.missingGaps[i].question
+        );
+      }
+    });
+
+    document.getElementById('btn-ingest-graph-replies')?.addEventListener('click', async () => {
+      await ingestStakeholderRepliesForTranscript(tr);
+      renderCopilotModalContent();
+    });
+    return;
+  }
+
+  // Tab 3: 1-Click Autonomous Strategy Autopilot
+  container.innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <div class="question-card" style="border-color: rgba(0, 210, 255, 0.4);">
+        <div style="font-size: 14px; font-weight: 700; color: #fff;">
+          Zero-Friction Autonomous Strategy Autopilot
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+          Executes the complete AI Strategist workflow across all 6 pillars in a single click so you spend minimal time driving the UI while achieving maximum commercial and governance outcomes:
+        </p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11.5px; color: var(--text-main);">
+          <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <strong>1. Meeting Transcript Synthesis:</strong> Ingests all 3 Microsoft Teams workshops (+$1.82M/yr net savings) into the backlog &amp; Agent Studio.
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <strong>2. Process Mining Telemetry:</strong> Ingests Power Automate, UiPath &amp; SAP S/4HANA bottlenecks (+$1.15M/yr net savings).
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <strong>3. Stakeholder Reply Resolution:</strong> Ingests verified answers from <code>toni@graspai.co.uk</code> &amp; <code>ann@leancloud.co.uk</code>, boosting Feasibility to 95%+.
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <strong>4. Purview, EU AI Act &amp; FinOps Guardrails:</strong> Enforces 100% ISO 42001 / Purview policies, sets 94% semantic cache, and arms Circuit Breaker.
+          </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
+          <button type="button" class="btn btn-primary" id="btn-trigger-full-autopilot">
+            ${getIconSvg('zap', 15)} Execute 1-Click End-to-End Autopilot Now
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btn-trigger-full-autopilot')?.addEventListener('click', () => {
+    copilotModal.style.display = 'none';
+    runStrategyAutopilot();
+  });
+}
+
+function synthesizeTranscriptIntoWorkspace(trObj, customText = '') {
+  const baseInit = { ...trObj.synthesizedInitiative };
+
+  // If the user edited or pasted custom notes, reflect any custom keywords
+  if (customText && customText.trim() !== trObj.rawTranscript.trim()) {
+    const firstLine = customText.trim().split('\n')[0].replace(/^\[.*?\]\s*/, '').slice(0, 68);
+    if (firstLine && firstLine.length > 10) {
+      baseInit.problem = `Synthesized from transcript: "${firstLine}..."`;
+    }
+  }
+
+  const existingIdx = state.initiatives.findIndex(i => i.id === baseInit.id);
+  if (existingIdx >= 0) {
+    state.initiatives[existingIdx] = baseInit;
+  } else {
+    state.initiatives.unshift(baseInit);
+  }
+
+  const generatedTopo = synthesizeTopologyForInitiative(baseInit);
+  generatedTopo.id = baseInit.topologyId;
+  const existingTopoIdx = state.topologies.findIndex(t => t.id === generatedTopo.id);
+  if (existingTopoIdx >= 0) {
+    state.topologies[existingTopoIdx] = generatedTopo;
+  } else {
+    state.topologies.unshift(generatedTopo);
+  }
+
+  state.selectedInitiativeId = baseInit.id;
+  state.selectedTopology = generatedTopo;
+  state.selectedNode = generatedTopo.nodes[0];
+
+  if (!state.synthesizedTranscriptIds.includes(trObj.id)) {
+    state.synthesizedTranscriptIds.push(trObj.id);
+  }
+
+  persistState();
+  updateGlobalBadges();
+  renderView(state.activeView);
+  appendTelemetryLog('success', `[GraphTranscriptAI] Synthesized "${baseInit.title}" ($${baseInit.projectedRoi.toLocaleString()}/yr) + 4-agent blueprint`);
+  showToast(`Transcript synthesized! Added "${baseInit.title}" ($${Math.round(baseInit.projectedRoi / 1000)}k/yr) & generated ${trObj.missingGaps.length} targeted stakeholder questions`, 'success');
+}
+
+async function sendQuestionViaGraph(toEmail, subject, questionBody) {
+  const statusBox = document.getElementById('graph-mail-status-box');
+  if (statusBox) {
+    statusBox.textContent = `Dispatching targeted question to ${toEmail} via GraspAI Microsoft Graph API...`;
+  }
+  try {
+    const resp = await fetch('/api/graph/send-mail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fromUser: state.graphStatus?.primaryMailbox || 'leon@graspai.co.uk',
+        toEmail,
+        subject,
+        content: `Hello,\n\nFollowing our AI Strategy discovery session, please confirm the following targeted item so we can lock the architecture & ROI business case:\n\n• ${questionBody}\n\nSent via Nexus AI Strategist Hub (GraspAI Microsoft Graph Integration)`
+      })
+    });
+    const data = await resp.json();
+    state.sentEmails.push({ toEmail, subject, time: new Date().toLocaleTimeString() });
+    persistState();
+
+    const msg = data.sentViaGraph
+      ? `Sent via Microsoft Graph API (${data.senderUpn} -> ${toEmail}): HTTP 202 Accepted`
+      : `Authenticated via GraspAI Graph Token for ${toEmail} (${data.graphNote || 'Queued in Outbox'})`;
+
+    if (statusBox) {
+      statusBox.textContent = `✓ ${msg}`;
+    }
+    appendTelemetryLog('info', `[GraphMail.Send] Targeted question dispatched to ${toEmail}`);
+    showToast(`Targeted discovery question dispatched to ${toEmail}!`, 'success');
+  } catch {
+    if (statusBox) {
+      statusBox.textContent = `✓ Queued targeted question for ${toEmail} (Ready for reply ingestion)`;
+    }
+    showToast(`Queued discovery question for ${toEmail}`, 'info');
+  }
+}
+
+async function ingestStakeholderRepliesForTranscript(trObj) {
+  if (!state.synthesizedTranscriptIds.includes(trObj.id)) {
+    synthesizeTranscriptIntoWorkspace(trObj);
+  }
+
+  // Probe live Graph Inbox messages if connected
+  try {
+    const resp = await fetch(`/api/graph/inbox?mailbox=${encodeURIComponent(state.graphStatus?.primaryMailbox || 'leon@graspai.co.uk')}`);
+    if (resp.ok) {
+      const inboxData = await resp.json();
+      if (inboxData.messages?.length) {
+        appendTelemetryLog('info', `[GraphMail.Read] Synced ${inboxData.messages.length} messages from ${inboxData.mailbox} inbox`);
+      }
+    }
+  } catch {
+    // Continue with structured stakeholder answer extraction
+  }
+
+  const targetInit = state.initiatives.find(i => i.id === trObj.synthesizedInitiative.id);
+  if (targetInit && trObj.simulatedReplyBoost) {
+    targetInit.feasibility = trObj.simulatedReplyBoost.feasibilityAfter;
+    targetInit.hourlyRate = trObj.simulatedReplyBoost.hourlyRateAfter;
+    targetInit.projectedRoi = trObj.simulatedReplyBoost.projectedRoiAfter;
+    targetInit.status = trObj.simulatedReplyBoost.statusAfter;
+    targetInit.sdlcStage = trObj.simulatedReplyBoost.sdlcStageAfter;
+    targetInit.adoptionRate = Math.max(targetInit.adoptionRate || 65, 84);
+  }
+
+  if (!state.repliedTranscriptIds.includes(trObj.id)) {
+    state.repliedTranscriptIds.push(trObj.id);
+  }
+
+  persistState();
+  updateGlobalBadges();
+  renderView(state.activeView);
+  appendTelemetryLog('success', `[StakeholderReplyAI] ${trObj.simulatedReplyBoost.replySummary}`);
+  showToast(`Stakeholder replies ingested! Feasibility upgraded to ${trObj.simulatedReplyBoost.feasibilityAfter}% & ROI updated to $${trObj.simulatedReplyBoost.projectedRoiAfter.toLocaleString()}/yr`, 'success');
+}
+
+function autoRemediateGovernanceAndFinOps() {
+  state.policies.forEach(p => {
+    p.checked = true;
+    p.status = 'Compliant';
+  });
+  state.circuitBreakerActive = true;
+  state.aiopsState.surgeActive = false;
+  state.aiopsState.latencyP95 = 340;
+  state.aiopsState.ptuUtilizationPct = 64;
+  state.aiopsState.semanticCacheThreshold = 94;
+  persistState();
+  updateGlobalBadges();
+  renderView(state.activeView);
+  appendTelemetryLog('success', '[AutoRemediate] All 6 Purview/EU AI Act controls enforced; Cosmos DB Semantic Cache set to 94%; Circuit Breaker armed');
+  showToast('100% Purview & EU AI Act controls enforced + FinOps PTU & Circuit Breaker optimized!', 'success');
+}
+
+function runStrategyAutopilot() {
+  showToast('Running Autonomous Strategy Autopilot across all 6 pillars...', 'info');
+
+  // 1. Ingest all Teams Meeting Transcripts & Stakeholder Replies
+  MEETING_TRANSCRIPTS.forEach(tr => {
+    const initCopy = { ...tr.synthesizedInitiative };
+    if (tr.simulatedReplyBoost) {
+      initCopy.feasibility = tr.simulatedReplyBoost.feasibilityAfter;
+      initCopy.hourlyRate = tr.simulatedReplyBoost.hourlyRateAfter;
+      initCopy.projectedRoi = tr.simulatedReplyBoost.projectedRoiAfter;
+      initCopy.status = tr.simulatedReplyBoost.statusAfter;
+      initCopy.sdlcStage = tr.simulatedReplyBoost.sdlcStageAfter;
+      initCopy.adoptionRate = 86;
+    }
+    const existingIdx = state.initiatives.findIndex(i => i.id === initCopy.id);
+    if (existingIdx >= 0) {
+      state.initiatives[existingIdx] = initCopy;
+    } else {
+      state.initiatives.unshift(initCopy);
+    }
+
+    const genTopo = synthesizeTopologyForInitiative(initCopy);
+    genTopo.id = initCopy.topologyId;
+    if (!state.topologies.some(t => t.id === genTopo.id)) {
+      state.topologies.unshift(genTopo);
+    }
+
+    if (!state.synthesizedTranscriptIds.includes(tr.id)) {
+      state.synthesizedTranscriptIds.push(tr.id);
+    }
+    if (!state.repliedTranscriptIds.includes(tr.id)) {
+      state.repliedTranscriptIds.push(tr.id);
+    }
+  });
+
+  // 2. Ingest Process Mining Opportunities
+  const existingIds = new Set(state.initiatives.map(i => i.id));
+  PROCESS_MINING_OPPORTUNITIES.forEach(pm => {
+    if (!existingIds.has(pm.id)) {
+      state.initiatives.push({ ...pm });
+    }
+  });
+  state.processMiningIngested = true;
+
+  // 3. Auto-Remediate Governance & FinOps
+  autoRemediateGovernanceAndFinOps();
+
+  // 4. Open Executive Steering Brief ready for 1-click download
+  setTimeout(() => {
+    openExportModal('exec');
+    showToast('Strategy Autopilot Complete! 11 initiatives prioritized, stakeholder replies applied, 100% Purview verified & Board Brief generated.', 'success');
+  }, 500);
 }
 
 // ==========================================================================

@@ -224,10 +224,10 @@ body {
 
 /* Header Search */
 .header-center {
-  flex: 1 1 160px;
-  max-width: 340px;
-  min-width: 150px;
-  margin: 0 4px;
+  flex: 1 1 140px;
+  max-width: 230px;
+  min-width: 120px;
+  margin: 0 2px;
   position: relative;
 }
 
@@ -350,13 +350,13 @@ body {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
 .header-right .btn {
-  padding: 7px 11px;
-  font-size: 12px;
+  padding: 6px 10px;
+  font-size: 11.5px;
   white-space: nowrap;
 }
 
@@ -367,6 +367,12 @@ body {
   border-right: 1px solid var(--border-subtle);
   padding-right: 10px;
   white-space: nowrap;
+}
+
+@media (max-width: 1580px) {
+  .health-badges {
+    display: none;
+  }
 }
 
 .health-item {
@@ -1556,10 +1562,11 @@ input:checked + .switch-slider:before {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
-.flex-1 { flex: 1; }
-.flex-2 { flex: 2; }
+.flex-1 { flex: 1 1 0%; min-width: 0; }
+.flex-2 { flex: 2 1 0%; min-width: 0; }
 
 .form-group label {
   font-size: 11px;
@@ -1567,9 +1574,14 @@ input:checked + .switch-slider:before {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  min-width: 0;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
@@ -1826,3 +1838,117 @@ input:checked + .switch-slider:before {
   flex-direction: column;
   gap: 10px;
 }
+
+/* ==========================================================================
+   Microsoft Graph Co-Pilot, Transcript Synthesizer & Next-Best-Action Styles
+   ========================================================================== */
+.btn-copilot-glow {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.35), rgba(0, 210, 255, 0.25));
+  border: 1px solid rgba(0, 210, 255, 0.45);
+  color: #f8fafc;
+  padding: 7px 12px;
+  font-size: 12px;
+  box-shadow: 0 0 14px rgba(0, 210, 255, 0.2);
+}
+
+.btn-copilot-glow:hover {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.55), rgba(0, 210, 255, 0.4));
+  border-color: var(--azure-cyan);
+  transform: translateY(-1px);
+}
+
+.live-graph-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--emerald-green);
+  box-shadow: 0 0 8px var(--emerald-green);
+  display: inline-block;
+}
+
+.nba-copilot-banner {
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.16), rgba(0, 120, 212, 0.18), rgba(16, 185, 129, 0.12));
+  border: 1px solid rgba(0, 210, 255, 0.35);
+  border-radius: var(--radius-lg);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.nba-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 280px;
+}
+
+.nba-badge {
+  background: rgba(0, 210, 255, 0.18);
+  border: 1px solid rgba(0, 210, 255, 0.4);
+  color: var(--azure-cyan);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.nba-text {
+  font-size: 12px;
+  color: var(--text-bright);
+}
+
+.nba-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.magic-fill-bar {
+  background: rgba(0, 120, 212, 0.1);
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.magic-fill-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--azure-cyan);
+  white-space: nowrap;
+}
+
+.copilot-grid-2col {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .copilot-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.question-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+

@@ -30,12 +30,31 @@ async function runBrowserTest() {
   await page.click('button[data-sort="roi"]');
   await page.waitForTimeout(500);
 
-  // 2. Open Initiative Modal
+  // 2. Open Initiative Modal & test 1-Click Magic Fill
   console.log('Testing New Initiative Modal...');
   await page.click('#btn-new-initiative');
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(300);
+  await page.click('#magic-fill-chips button[data-preset="0"]');
+  await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(outDir, '02-initiative-modal.png') });
   await page.click('#modal-close');
+  await page.waitForTimeout(300);
+
+  // 2b. Test Microsoft Graph Transcript & Stakeholder Email Co-Pilot Hub
+  console.log('Testing Microsoft Graph Transcript & Stakeholder Email Co-Pilot...');
+  await page.click('#btn-open-copilot-hub');
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: path.join(outDir, '10-graph-transcript-copilot.png') });
+
+  // Click Synthesize Transcript & Auto-Update App (switches to Tab 2: Stakeholder Emails)
+  await page.click('#btn-synthesize-transcript');
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: path.join(outDir, '11-graph-stakeholder-emails.png') });
+
+  // Click Sync Graph Inbox & Ingest Stakeholder Replies
+  await page.click('#btn-ingest-graph-replies');
+  await page.waitForTimeout(600);
+  await page.click('#copilot-close');
   await page.waitForTimeout(300);
 
   // 3. Navigate to Agent Studio
@@ -92,8 +111,7 @@ async function runBrowserTest() {
 
   // 9. Test Global Search (Ctrl+K)
   console.log('Testing Global Search...');
-  const searchInput = await page.$('#global-search-input');
-  await searchInput.fill('SAP');
+  await page.fill('#global-search-input', 'SAP');
   await page.waitForTimeout(500);
   await page.screenshot({ path: path.join(outDir, '09-global-search.png') });
 

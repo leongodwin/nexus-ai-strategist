@@ -541,3 +541,212 @@ export const HORIZON_RADAR = [
     actionText: "Track Roadmap"
   }
 ];
+
+export const MEETING_TRANSCRIPTS = [
+  {
+    id: "tr-kyb",
+    title: "Teams Call: Commercial KYB/KYC Onboarding & Sanctions Bottleneck",
+    participants: "Leon (CEO, GraspAI), Toni Hunter (Risk & Compliance), Ann (Enterprise Operations)",
+    duration: "38 mins • Microsoft Teams OnlineMeetingTranscript.Read.All",
+    rawTranscript: `[00:01:14] Leon (CEO): Thanks everyone for joining. We need to cut down our commercial client KYB/KYC onboarding cycle time—currently it takes 5 days per corporate entity.
+[00:04:22] Toni Hunter (Compliance): Our analysts spend roughly 9,200 hours a year manually pulling Companies House filings, cross-checking OFAC/UK sanctions lists, and copying beneficial ownership fields into Dataverse and our legacy core banking screen.
+[00:08:45] Ann (Operations): If we use Azure AI Foundry with Document Intelligence to extract Registry PDFs, Microsoft Copilot Studio for the analyst review card in Teams, and a UiPath unattended RPA bot for the legacy KYC screen entry, we can cut onboarding from 5 days to 18 minutes.
+[00:14:10] Toni Hunter (Compliance): Agreed, but remember EU AI Act high-risk rules apply to credit/onboarding scoring, and passport/UBO data must be masked by Microsoft Purview before hitting the prompt context.
+[00:18:30] Leon (CEO): Wait—we still need to confirm three things after this call: (1) What is the exact loaded hourly cost for KYC analysts? (2) Does IT have the UiPath unattended bot license pool ready in Production? (3) What risk score threshold triggers mandatory Compliance Officer sign-off?`,
+    synthesizedInitiative: {
+      id: "init-tr-kyb",
+      title: "Autonomous KYB/KYC Onboarding & Sanctions Screening Agent",
+      department: "Legal & Compliance",
+      problem: "Analysts spend 9,200 hrs/yr manually extracting corporate registry filings, screening sanctions lists, and re-keying UBO data (5-day cycle).",
+      cycleTimeReduction: "5 days → 18 mins (-99%)",
+      stack: "Microsoft Copilot Studio + Azure AI Foundry + UiPath RPA",
+      feasibility: 88,
+      hoursSaved: 9200,
+      hourlyRate: 70,
+      apiCost: 26000,
+      projectedRoi: 618000,
+      risk: "High",
+      status: "Discovery & Blueprint",
+      sdlcStage: "Architecture Sign-Off -> Dev Ring 1",
+      changeProgramme: "Compliance Analyst Co-Design + ADKAR Playbook",
+      adoptionRate: 64,
+      utilisationRate: 78,
+      weeklyActiveUsers: 95,
+      kpiTarget: "Client Onboarding SLA < 20 mins",
+      leadArchitect: "Leon (Chief AI Strategist)",
+      topologyId: "topo-tr-kyb",
+      models: ["Azure AI Foundry (GPT-4o)", "Azure Document Intelligence v4.0", "UiPath Unattended RPA Bot"]
+    },
+    missingGaps: [
+      {
+        role: "Compliance & Risk Lead",
+        defaultRecipient: "toni@graspai.co.uk",
+        question: "Confirm the exactKYB/sanctions risk score threshold (e.g. >0.65) that mandates Human-in-the-Loop Compliance Officer sign-off in Microsoft Teams under EU AI Act rules."
+      },
+      {
+        role: "Enterprise Operations & Finance",
+        defaultRecipient: "ann@leancloud.co.uk",
+        question: "Confirm the fully loaded hourly cost ($/hr) for Tier-2 KYC analysts and peak monthly corporate onboarding volume so we can lock the CFO business case."
+      },
+      {
+        role: "Executive Sponsor / IT Architecture",
+        defaultRecipient: "leon@graspai.co.uk",
+        question: "Confirm availability of 4 UiPath unattended bot licenses and Entra ID service principal permissions for Companies House & OFAC API connectors."
+      }
+    ],
+    simulatedReplyBoost: {
+      feasibilityAfter: 96,
+      hourlyRateAfter: 78,
+      projectedRoiAfter: 691600,
+      statusAfter: "In Architecture Review",
+      sdlcStageAfter: "CI/CD UAT Ring 2 (DPO & Red-Team Verified)",
+      replySummary: "Replies ingested from toni@graspai.co.uk & ann@leancloud.co.uk: Confirmed $78/hr loaded analyst rate (+1,100 peak monthly entities), EU AI Act HITL threshold set at Risk Score >= 0.60 in Teams, and 4 UiPath unattended bots provisioned."
+    }
+  },
+  {
+    id: "tr-claims",
+    title: "Teams Call: Multi-Modal Warranty & Insurance Claims Triage",
+    participants: "Leon (CEO, GraspAI), Ann (VP Customer Operations), Toni Hunter (Claims Automation Lead)",
+    duration: "42 mins • Microsoft Teams OnlineMeetingTranscript.Read.All",
+    rawTranscript: `[00:02:05] Ann (VP Customer Ops): Our warranty claims team is drowning in 45,000 email attachments and photos per quarter. First-response time has slipped to 72 hours.
+[00:06:18] Toni Hunter (Automation Lead): Right now agents open each photo, look up policy coverage in SharePoint, and manually key claim reserves into SAP and Dataverse. That's 11,500 hours of manual triage annually.
+[00:11:40] Leon (CEO): Let's deploy an Azure AI Foundry multimodal vision pipeline paired with Power Platform and UiPath Document Understanding. Low-value claims under $1,500 with 98% confidence can auto-adjudicate straight through.
+[00:16:50] Ann (VP Customer Ops): That would save over $650k a year! Let's send out targeted follow-up questions today on the exact auto-approval dollar cap, SAP BAPI endpoint readiness, and PII photo redaction rules.`,
+    synthesizedInitiative: {
+      id: "init-tr-claims",
+      title: "Multi-Modal Warranty & Claims Adjudication Co-worker",
+      department: "Customer Operations",
+      problem: "11,500 hrs/yr spent manually inspecting claim damage photos, checking policy PDFs, and keying reserves into Dataverse & SAP (72h SLA).",
+      cycleTimeReduction: "72 hrs → 4.5 mins (-99%)",
+      stack: "Azure AI Foundry + Power Platform + UiPath Document Understanding",
+      feasibility: 89,
+      hoursSaved: 11500,
+      hourlyRate: 62,
+      apiCost: 31000,
+      projectedRoi: 682000,
+      risk: "Medium",
+      status: "Discovery & Blueprint",
+      sdlcStage: "Prompt Flow Eval -> Pilot Ring 2",
+      changeProgramme: "Claims Adjuster Champions + Prompt Clinics",
+      adoptionRate: 71,
+      utilisationRate: 83,
+      weeklyActiveUsers: 180,
+      kpiTarget: "Straight-Through Claims Processing 74%",
+      leadArchitect: "Leon (Chief AI Strategist)",
+      topologyId: "topo-tr-claims",
+      models: ["Azure AI Foundry (GPT-4o Vision)", "Power Automate + UiPath RPA", "Azure AI Search"]
+    },
+    missingGaps: [
+      {
+        role: "VP Customer Operations",
+        defaultRecipient: "ann@leancloud.co.uk",
+        question: "Confirm the maximum claim dollar value ($1,500 vs $2,500) eligible for straight-through autonomous adjudication without adjuster review."
+      },
+      {
+        role: "Claims Automation & Governance Lead",
+        defaultRecipient: "toni@graspai.co.uk",
+        question: "Confirm Purview PII auto-blurring requirements for customer vehicle license plates and personal addresses in uploaded claim photos."
+      },
+      {
+        role: "Chief AI Strategist / IT",
+        defaultRecipient: "leon@graspai.co.uk",
+        question: "Confirm Azure AI Foundry PTU reservation (125 PTU) and SAP Claims BAPI OAuth2 gateway readiness."
+      }
+    ],
+    simulatedReplyBoost: {
+      feasibilityAfter: 95,
+      hourlyRateAfter: 68,
+      projectedRoiAfter: 751000,
+      statusAfter: "Pilot (1,200 Users)",
+      sdlcStageAfter: "CI/CD Pilot Ring 2 (180 Claims Adjusters)",
+      replySummary: "Replies ingested from ann@leancloud.co.uk & toni@graspai.co.uk: Confirmed $2,000 straight-through auto-approval cap, Purview vision redaction enabled for license plates/PII, and 125 PTU allocated."
+    }
+  },
+  {
+    id: "tr-rfp",
+    title: "Teams Call: Enterprise RFP & Security Questionnaire Copilot",
+    participants: "Leon (CEO, GraspAI), Toni Hunter (Pre-Sales Director), Ann (InfoSec Lead)",
+    duration: "31 mins • Microsoft Teams OnlineMeetingTranscript.Read.All",
+    rawTranscript: `[00:01:50] Toni Hunter (Pre-Sales): Every enterprise RFP comes with a 300-question InfoSec and GDPR spreadsheet. Our solutions engineers spend 6,800 hours a year copy-pasting answers from old Word docs.
+[00:07:12] Ann (InfoSec): Worse, sometimes they paste outdated ISO 27001 or SOC2 clauses. We need a single Microsoft Copilot Studio agent grounded on our verified SharePoint compliance vault via Azure AI Search.
+[00:12:05] Leon (CEO): If we ground Copilot Studio on the verified SharePoint library with strict citation enforcement, we can auto-complete 92% of every RFP Excel sheet in 6 minutes and unlock $490k in engineering capacity.`,
+    synthesizedInitiative: {
+      id: "init-tr-rfp",
+      title: "Autonomous Enterprise RFP & Security Tender Synthesizer",
+      department: "IT & Engineering",
+      problem: "Solutions engineers spend 6,800 hrs/yr manually answering 300-row customer RFP and InfoSec compliance questionnaires.",
+      cycleTimeReduction: "14 hrs → 6 mins (-99%)",
+      stack: "Microsoft Copilot Studio + Azure AI Search + SharePoint Embedded",
+      feasibility: 94,
+      hoursSaved: 6800,
+      hourlyRate: 80,
+      apiCost: 19000,
+      projectedRoi: 525000,
+      risk: "Low",
+      status: "Discovery & Blueprint",
+      sdlcStage: "Power Platform ALM -> Prod Ring",
+      changeProgramme: "Sales Engineering Enablement + Teams Champions",
+      adoptionRate: 82,
+      utilisationRate: 88,
+      weeklyActiveUsers: 110,
+      kpiTarget: "RFP Turnaround Time -92%",
+      leadArchitect: "Leon (Chief AI Strategist)",
+      topologyId: "topo-tr-rfp",
+      models: ["Azure AI Foundry (GPT-4o)", "Azure AI Search (Semantic Ranker)"]
+    },
+    missingGaps: [
+      {
+        role: "Pre-Sales & Commercial Director",
+        defaultRecipient: "toni@graspai.co.uk",
+        question: "Confirm the quarterly enterprise RFP volume and average win-rate uplift target for the Q4 commercial steering brief."
+      },
+      {
+        role: "InfoSec & Compliance Lead",
+        defaultRecipient: "ann@leancloud.co.uk",
+        question: "Confirm which SharePoint site collections hold the golden ISO 42001 / SOC2 Type II evidence binder for Entra ID ACL indexing."
+      }
+    ],
+    simulatedReplyBoost: {
+      feasibilityAfter: 98,
+      hourlyRateAfter: 85,
+      projectedRoiAfter: 559000,
+      statusAfter: "In Production",
+      sdlcStageAfter: "CI/CD Prod Ring 3 (110 Solutions Engineers)",
+      replySummary: "Replies ingested: SharePoint Golden InfoSec Vault indexed with Entra ID ACL trimming; loaded SE rate confirmed at $85/hr ($559k/yr net savings)."
+    }
+  }
+];
+
+export const MAGIC_FILL_PRESETS = [
+  {
+    label: "SAP 3-Way Invoice & UiPath RPA",
+    title: "Autonomous SAP 3-Way PO Match & Vendor Exception Agent",
+    dept: "Finance & Accounting",
+    problem: "AP specialists spend 7,800 hrs/yr manually matching PDF vendor invoices against SAP S/4HANA POs and goods receipts.",
+    stack: "Azure AI Foundry + UiPath RPA + Document Intelligence",
+    hours: 7800,
+    rate: 68,
+    apiCost: 22000
+  },
+  {
+    label: "Teams IT Service Desk Copilot",
+    title: "Zero-Touch IT ServiceNow & Entra Access Reset Copilot",
+    dept: "IT & Engineering",
+    problem: "L1 IT helpdesk handles 42,000 repetitive password, VPN, and software provisioning tickets annually across Teams.",
+    stack: "Microsoft Copilot Studio + Power Platform + Dataverse",
+    hours: 8400,
+    rate: 62,
+    apiCost: 18000
+  },
+  {
+    label: "Legal NDA & Contract Redliner",
+    title: "Autonomous Commercial Contract & GDPR Clause Redliner",
+    dept: "Legal & Compliance",
+    problem: "In-house counsel spend 5,400 hrs/yr reviewing standard vendor NDAs, DPAs, and MSAs against fallback playbooks.",
+    stack: "Azure AI Foundry + Semantic Kernel + Azure AI Search",
+    hours: 5400,
+    rate: 95,
+    apiCost: 21000
+  }
+];
+

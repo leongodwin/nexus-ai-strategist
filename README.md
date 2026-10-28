@@ -13,6 +13,10 @@ Designed to address the full responsibilities and technical requirements of an *
 7. **Collaborate with Senior Stakeholders & Prioritise Initiatives**: Opportunity Value Index (OVI) ranking, stage-gate lifecycle approvals, 2x2 Value vs. Feasibility prioritization matrix, and an automated Executive Steering Brief export.
 8. **Champion AI Governance, Privacy, Security & Responsible AI**: Microsoft Purview zero-data retention validation, NIST AI RMF / EU AI Act / ISO 42001 policy compliance mapping, and interactive red-team adversarial prompt shield testing.
 9. **Stay Current with Emerging AI Technologies**: Horizon Tech Radar tracking emerging Azure AI Foundry Agent Service, UiPath Agentic Orchestration, Microsoft SLMs, and multi-modal breakthroughs linked directly to portfolio initiatives.
+10. **Zero-Friction Microsoft Graph AI Co-Pilot & Strategy Autopilot**:
+    - **Teams Meeting Transcript Ingestion (`OnlineMeetingTranscript.Read.All`)**: Automatically synthesizes stakeholder discovery transcripts into prioritized backlog initiatives, multi-agent topologies, governance controls, and missing information gaps.
+    - **Targeted Stakeholder Email Questionnaires (`Mail.Send` & `Mail.Read`)**: Dispatches role-specific follow-up questions via Microsoft Graph API and ingests stakeholder replies to automatically refine Feasibility %, Net Annual Savings, and Stage Gate approvals.
+    - **1-Click Strategy Autopilot & Proactive Next-Best-Action Banner**: Executes the full 6-pillar workflow in a single click so the user spends minimal time driving the UI while achieving maximum commercial outcomes.
 
 ---
 

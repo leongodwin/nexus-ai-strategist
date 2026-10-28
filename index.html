@@ -70,6 +70,14 @@
           Reset Demo
         </button>
 
+        <button class="btn btn-copilot-glow" id="btn-open-copilot-hub" title="Ingest Microsoft Teams Transcripts, Dispatch Targeted Graph Emails & Run Strategy Autopilot">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span>Graph Co-Pilot &amp; Transcripts</span>
+          <span class="live-graph-dot" id="header-graph-dot" title="GraspAI Microsoft Graph API"></span>
+        </button>
+
         <button class="btn btn-outline" id="btn-quick-export" title="Export Solution Package">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -214,6 +222,15 @@
         </div>
         
         <form id="initiative-form" class="modal-form">
+          <div class="magic-fill-bar">
+            <span class="magic-fill-label">1-Click AI Scenario Fill:</span>
+            <div class="filter-pill-bar" id="magic-fill-chips">
+              <button type="button" class="filter-pill" data-preset="0">SAP 3-Way Invoice &amp; UiPath RPA</button>
+              <button type="button" class="filter-pill" data-preset="1">Teams IT Service Desk Copilot</button>
+              <button type="button" class="filter-pill" data-preset="2">Legal NDA &amp; Contract Redliner</button>
+            </div>
+          </div>
+
           <div class="form-row">
             <div class="form-group flex-2">
               <label for="init-title">Initiative Title</label>
@@ -319,6 +336,36 @@
             </svg>
             Download Complete ZIP Bundle
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Microsoft Graph Transcript Synthesis, Stakeholder Questionnaire & Strategy Autopilot Modal -->
+    <div class="modal-overlay" id="copilot-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-copilot-heading">
+      <div class="modal-card modal-lg">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <div class="modal-icon-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            </div>
+            <div>
+              <h2 class="modal-title" id="modal-copilot-heading">Microsoft Graph AI Co-Pilot: Transcripts, Targeted Emails &amp; Autopilot</h2>
+              <p class="modal-subtitle" id="modal-copilot-subtitle">Connected to GraspAI Microsoft Graph API (OnlineMeetingTranscript.Read.All &bull; Mail.Send &bull; Mail.Read)</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="copilot-close" aria-label="Close co-pilot modal">&times;</button>
+        </div>
+
+        <div class="export-tabs" id="copilot-tabs">
+          <button class="export-tab active" data-copilot-tab="transcript">1. Ingest Meeting Transcript</button>
+          <button class="export-tab" data-copilot-tab="email">2. Targeted Stakeholder Emails (Graph API)</button>
+          <button class="export-tab" data-copilot-tab="autopilot">3. 1-Click Strategy Autopilot</button>
+        </div>
+
+        <div id="copilot-tab-body" class="export-content" style="max-height: 580px;">
+          <!-- Rendered dynamically by main.js -->
         </div>
       </div>
     </div>

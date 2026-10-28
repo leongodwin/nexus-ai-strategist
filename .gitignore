@@ -38,8 +38,10 @@ test-artifacts/
 *.sln
 *.sw?
 
-# Environment files
+# Environment files & local credentials
 .env
 .env.*
 !.env.example
+graph api.txt
+*secret*.txt
 
