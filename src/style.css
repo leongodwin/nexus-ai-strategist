@@ -127,7 +127,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 20px;
+  gap: 12px;
   z-index: 100;
   position: relative;
 }
@@ -135,7 +136,8 @@ body {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
+  flex-shrink: 0;
 }
 
 .brand-badge {
@@ -223,7 +225,8 @@ body {
 .header-center {
   flex: 1;
   max-width: 480px;
-  margin: 0 24px;
+  min-width: 280px;
+  margin: 0 16px;
   position: relative;
 }
 
@@ -232,6 +235,7 @@ body {
   top: calc(100% + 8px);
   left: 0;
   right: 0;
+  min-width: 380px;
   background: rgba(11, 17, 33, 0.98);
   backdrop-filter: var(--glass-blur-lg);
   border: 1px solid var(--border-active);
@@ -345,7 +349,8 @@ body {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .health-badges {
@@ -353,7 +358,7 @@ body {
   align-items: center;
   gap: 10px;
   border-right: 1px solid var(--border-subtle);
-  padding-right: 16px;
+  padding-right: 12px;
 }
 
 .health-item {
@@ -1581,19 +1586,22 @@ input:checked + .switch-slider:before {
   flex-direction: column;
   gap: 10px;
   z-index: 2000;
+  max-width: 480px;
+  pointer-events: none;
 }
 
 .toast {
+  pointer-events: auto;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
-  padding: 12px 18px;
+  padding: 10px 14px;
   color: #fff;
-  font-size: 13px;
+  font-size: 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   box-shadow: var(--shadow-lg);
   animation: slideIn 0.25s ease-out;
 }

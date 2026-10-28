@@ -23,6 +23,10 @@ dist/
 dist-ssr/
 *.local
 
+# Browser test artifacts
+test-artifacts/
+
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -38,3 +42,4 @@ dist-ssr/
 .env
 .env.*
 !.env.example
+
